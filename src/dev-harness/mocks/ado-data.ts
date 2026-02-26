@@ -1,0 +1,184 @@
+import type { CachedBuild, CachedPR, ExtensionConfig } from "@/storage/types";
+import {
+  DEFAULT_ACTIVE_POLL_INTERVAL,
+  DEFAULT_IDLE_POLL_INTERVAL,
+  DEFAULT_BOOKMARK_FOLDER,
+} from "@/shared/constants";
+
+export const mockConfig: ExtensionConfig = {
+  organization: "myorg",
+  pat: "mock-pat-token",
+  projects: ["ProjectA", "ProjectB"],
+  activePollingInterval: DEFAULT_ACTIVE_POLL_INTERVAL,
+  idlePollingInterval: DEFAULT_IDLE_POLL_INTERVAL,
+  prSectionEnabled: true,
+  bookmarksEnabled: false,
+  bookmarkFolderName: DEFAULT_BOOKMARK_FOLDER,
+};
+
+export const mockPRs: CachedPR[] = [
+  {
+    id: 101,
+    title: "feat: Add user authentication flow",
+    projectName: "ProjectA",
+    repositoryName: "web-app",
+    url: "https://dev.azure.com/myorg/ProjectA/_git/web-app/pullrequest/101",
+    createdDate: new Date(Date.now() - 2 * 86400000).toISOString(),
+    lastUpdated: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: 102,
+    title: "fix: Resolve pipeline timeout issue on long builds",
+    projectName: "ProjectB",
+    repositoryName: "infra-tools",
+    url: "https://dev.azure.com/myorg/ProjectB/_git/infra-tools/pullrequest/102",
+    createdDate: new Date(Date.now() - 86400000).toISOString(),
+    lastUpdated: new Date(Date.now() - 7200000).toISOString(),
+  },
+  {
+    id: 103,
+    title: "chore: Update npm dependencies",
+    projectName: "ProjectA",
+    repositoryName: "web-app",
+    url: "https://dev.azure.com/myorg/ProjectA/_git/web-app/pullrequest/103",
+    createdDate: new Date(Date.now() - 3 * 86400000).toISOString(),
+    lastUpdated: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
+
+export const mockBuilds: CachedBuild[] = [
+  {
+    id: 5001,
+    buildNumber: "20250226.1",
+    definitionName: "CI - Web App",
+    projectName: "ProjectA",
+    status: "inProgress",
+    startTime: new Date(Date.now() - 300000).toISOString(),
+    queueTime: new Date(Date.now() - 360000).toISOString(),
+    url: "https://dev.azure.com/myorg/ProjectA/_build/results?buildId=5001",
+    totalTasks: 12,
+    completedTasks: 7,
+    jobs: [
+      {
+        name: "Build",
+        state: "completed",
+        result: "succeeded",
+        totalTasks: 5,
+        completedTasks: 5,
+      },
+      {
+        name: "Test",
+        state: "inProgress",
+        totalTasks: 4,
+        completedTasks: 2,
+      },
+      {
+        name: "Deploy",
+        state: "pending",
+        totalTasks: 3,
+        completedTasks: 0,
+      },
+    ],
+  },
+  {
+    id: 5002,
+    buildNumber: "20250226.2",
+    definitionName: "Release - Infra Tools",
+    projectName: "ProjectB",
+    status: "inProgress",
+    startTime: new Date(Date.now() - 120000).toISOString(),
+    queueTime: new Date(Date.now() - 150000).toISOString(),
+    url: "https://dev.azure.com/myorg/ProjectB/_build/results?buildId=5002",
+    totalTasks: 8,
+    completedTasks: 2,
+    jobs: [
+      {
+        name: "Validate",
+        state: "completed",
+        result: "succeeded",
+        totalTasks: 2,
+        completedTasks: 2,
+      },
+      {
+        name: "Package",
+        state: "inProgress",
+        totalTasks: 3,
+        completedTasks: 0,
+      },
+      {
+        name: "Publish",
+        state: "pending",
+        totalTasks: 3,
+        completedTasks: 0,
+      },
+    ],
+  },
+];
+
+/** Scenario presets for the dev harness */
+export const scenarios = {
+  connected: {
+    label: "Connected (with data)",
+    config: mockConfig,
+    builds: mockBuilds,
+    prs: mockPRs,
+    lastUpdated: new Date().toISOString(),
+    errorState: null,
+  },
+  noBuilds: {
+    label: "Connected (no builds)",
+    config: mockConfig,
+    builds: [],
+    prs: mockPRs,
+    lastUpdated: new Date().toISOString(),
+    errorState: null,
+  },
+  noPRs: {
+    label: "Connected (no PRs)",
+    config: mockConfig,
+    builds: mockBuilds,
+    prs: [],
+    lastUpdated: new Date().toISOString(),
+    errorState: null,
+  },
+  empty: {
+    label: "Connected (empty)",
+    config: mockConfig,
+    builds: [],
+    prs: [],
+    lastUpdated: new Date().toISOString(),
+    errorState: null,
+  },
+  disconnected: {
+    label: "Not configured",
+    config: { ...mockConfig, organization: "", pat: "" },
+    builds: [],
+    prs: [],
+    lastUpdated: null,
+    errorState: null,
+  },
+  patExpired: {
+    label: "PAT expired",
+    config: mockConfig,
+    builds: [],
+    prs: [],
+    lastUpdated: null,
+    errorState: {
+      type: "pat_expired" as const,
+      message: "Your PAT is invalid or has expired.",
+      timestamp: new Date().toISOString(),
+    },
+  },
+  networkError: {
+    label: "Network error",
+    config: mockConfig,
+    builds: mockBuilds,
+    prs: mockPRs,
+    lastUpdated: new Date(Date.now() - 300000).toISOString(),
+    errorState: {
+      type: "network_error" as const,
+      message: "Failed to fetch data from Azure DevOps.",
+      timestamp: new Date().toISOString(),
+    },
+  },
+} as const;
