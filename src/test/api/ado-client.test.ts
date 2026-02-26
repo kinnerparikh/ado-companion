@@ -6,6 +6,16 @@ describe("AdoClient", () => {
     vi.restoreAllMocks();
   });
 
+  function mockJsonResponse(data: unknown, ok = true, status = 200, statusText = "OK") {
+    return {
+      ok,
+      status,
+      statusText,
+      headers: { get: (name: string) => name === "content-type" ? "application/json" : null },
+      json: () => Promise.resolve(data),
+    } as unknown as Response;
+  }
+
   it("should encode PAT and make authenticated requests", async () => {
     const mockResponse = {
       authenticatedUser: {
@@ -15,10 +25,7 @@ describe("AdoClient", () => {
       },
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockResponse),
-    } as Response);
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockJsonResponse(mockResponse));
 
     const client = new AdoClient("myorg", "my-pat-token");
     const data = await client.getConnectionData();
@@ -45,16 +52,27 @@ describe("AdoClient", () => {
     });
   });
 
+  it("should throw AdoApiError when response is HTML (non-JSON)", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: "OK",
+      headers: { get: () => "text/html" },
+    } as unknown as Response);
+
+    const client = new AdoClient("myorg", "bad-pat");
+
+    await expect(client.getConnectionData()).rejects.toThrow(AdoApiError);
+    await expect(client.getConnectionData()).rejects.toThrow("non-JSON response");
+  });
+
   it("should fetch running builds for a project", async () => {
     const mockBuilds = {
       count: 1,
       value: [{ id: 1, buildNumber: "20250226.1", status: "inProgress" }],
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockBuilds),
-    } as Response);
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockJsonResponse(mockBuilds));
 
     const client = new AdoClient("myorg", "pat");
     const result = await client.getRunningBuilds("ProjectA");
@@ -72,10 +90,7 @@ describe("AdoClient", () => {
       ],
     };
 
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockPRs),
-    } as Response);
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockJsonResponse(mockPRs));
 
     const client = new AdoClient("myorg", "pat");
     const result = await client.getActivePullRequests("ProjectA", "user-123");

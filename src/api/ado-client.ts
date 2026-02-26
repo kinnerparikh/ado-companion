@@ -42,6 +42,15 @@ export class AdoClient {
       );
     }
 
+    // ADO may return 200 with HTML (login page) for invalid/expired PATs
+    const contentType = response.headers.get("content-type") ?? "";
+    if (!contentType.includes("application/json")) {
+      throw new AdoApiError(
+        "Authentication failed — received non-JSON response (likely invalid PAT)",
+        401
+      );
+    }
+
     return response.json() as Promise<T>;
   }
 
