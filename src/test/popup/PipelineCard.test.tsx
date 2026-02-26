@@ -24,9 +24,10 @@ const baseBuild: CachedBuild = {
 describe("PipelineCard", () => {
   it("renders pipeline name as a link", () => {
     render(<PipelineCard build={baseBuild} />);
-    const link = screen.getByRole("link", { name: "CI - Web App" });
+    const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", baseBuild.url);
     expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveTextContent("CI - Web App");
   });
 
   it("shows project name", () => {

@@ -19,15 +19,15 @@ export default function PullRequests({ prs }: Props) {
       ) : (
         <ul className="divide-y divide-gray-100">
           {sorted.map((pr) => (
-            <li key={pr.id} className="px-3 py-2 hover:bg-gray-50">
+            <li key={pr.id}>
               <a
                 href={pr.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block"
+                className="block px-3 py-3 hover:bg-gray-50 cursor-pointer"
               >
-                <p className="text-sm text-gray-800 truncate">{pr.title}</p>
-                <p className="text-xs text-gray-400 truncate">
+                <p className="text-sm text-gray-800 truncate hover:text-blue-600">{pr.title}</p>
+                <p className="text-xs text-gray-400 truncate mt-0.5">
                   {pr.projectName} / {pr.repositoryName}
                 </p>
               </a>
