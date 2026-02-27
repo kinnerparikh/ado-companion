@@ -135,7 +135,7 @@ export default function Popup() {
 
   return (
     <div className="w-96 max-h-[500px] flex flex-col">
-      <div className="flex-1 overflow-y-auto pb-9">
+      <div className="flex-1 overflow-y-auto scrollbar-hide pb-9">
         {sectionOrder.map(renderSection)}
       </div>
       <StatusBar lastUpdated={lastUpdated} error={error} />
