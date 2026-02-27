@@ -50,21 +50,23 @@ export default function PipelineCard({ build }: Props) {
           </span>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-2">
-          <div className="flex justify-between text-xs text-gray-400 mb-0.5">
-            <span>
-              {build.completedTasks} / {build.totalTasks} tasks
-            </span>
-            <span>{progressPct}%</span>
+        {/* Progress bar — only for active/queued builds */}
+        {build.status !== "completed" && (
+          <div className="mt-2">
+            <div className="flex justify-between text-xs text-gray-400 mb-0.5">
+              <span>
+                {build.completedTasks} / {build.totalTasks} tasks
+              </span>
+              <span>{progressPct}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div
+                className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div
-              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
+        )}
       </a>
 
       {/* Job breakdown (collapsible) — outside the link to avoid nested interactivity */}
