@@ -48,7 +48,7 @@ export default function Popup() {
 
   if (loading) {
     return (
-      <div className="w-80 p-4 text-center text-sm text-gray-400">
+      <div className="w-96 p-4 text-center text-sm text-gray-400">
         Loading…
       </div>
     );
@@ -56,7 +56,7 @@ export default function Popup() {
 
   if (!config?.organization || !config?.pat) {
     return (
-      <div className="w-80 p-4 text-center">
+      <div className="w-96 p-4 text-center">
         <p className="text-sm text-gray-500 mb-2">Not configured</p>
         <button
           className="text-sm text-blue-500 hover:underline cursor-pointer"
@@ -70,7 +70,7 @@ export default function Popup() {
 
   if (error?.type === "pat_expired" || error?.type === "auth_failed") {
     return (
-      <div className="w-80 p-4 text-center">
+      <div className="w-96 p-4 text-center">
         <p className="text-sm text-red-500 mb-1">
           {error.type === "pat_expired" ? "PAT expired" : "Authentication failed"}
         </p>
@@ -134,7 +134,7 @@ export default function Popup() {
   };
 
   return (
-    <div className="w-80 max-h-[500px] flex flex-col">
+    <div className="w-96 max-h-[500px] flex flex-col">
       <div className="flex-1 overflow-y-auto pb-9">
         {sectionOrder.map(renderSection)}
       </div>
