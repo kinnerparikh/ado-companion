@@ -6,6 +6,31 @@ interface Props {
   build: CachedBuild;
 }
 
+function WatchedBadge({ buildId }: { buildId: number }) {
+  const [hovered, setHovered] = useState(false);
+
+  const handleUnwatch = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chrome.runtime.sendMessage({
+      type: "UNWATCH_BUILD",
+      payload: { buildId },
+    });
+  };
+
+  return (
+    <span
+      className="mr-1 cursor-pointer select-none"
+      title={hovered ? "Stop watching" : "Watched build"}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={handleUnwatch}
+    >
+      {hovered ? "✕" : "👁"}
+    </span>
+  );
+}
+
 export default function PipelineCard({ build }: Props) {
   const [expanded, setExpanded] = useState(false);
   const progressPct =
@@ -35,7 +60,7 @@ export default function PipelineCard({ build }: Props) {
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800 truncate hover:text-blue-600">
-              {build.watched && <span title="Watched build" className="mr-1">👁</span>}
+              {build.watched && <WatchedBadge buildId={build.id} />}
               {build.definitionName}
             </p>
             <p className="text-xs text-gray-400 truncate mt-0.5">

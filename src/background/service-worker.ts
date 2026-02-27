@@ -165,63 +165,6 @@ async function poll(): Promise<void> {
       }
     }
 
-    // Fetch watched builds and merge with active builds
-    const watchedEntries = (await getStorage("watchedBuilds")) ?? [];
-    const now = Date.now();
-    // Prune expired entries
-    const validWatched = watchedEntries.filter(
-      (w) => new Date(w.expiresAt).getTime() > now
-    );
-    if (validWatched.length !== watchedEntries.length) {
-      await setStorage("watchedBuilds", validWatched);
-    }
-    // Fetch each watched build that isn't already in allBuilds
-    const activeBuildIds = new Set(allBuilds.map((b) => b.id));
-    for (const watched of validWatched) {
-      if (activeBuildIds.has(watched.buildId)) continue;
-      try {
-        const build = await client.getBuild(watched.project, watched.buildId);
-        let jobs: CachedJob[] = [];
-        let totalTasks = 0;
-        let completedTasks = 0;
-
-        if (build.status !== "completed") {
-          try {
-            const timeline = await client.getBuildTimeline(watched.project, build.id);
-            const progress = extractJobProgress(timeline);
-            jobs = progress.jobs;
-            totalTasks = progress.totalTasks;
-            completedTasks = progress.completedTasks;
-          } catch {
-            // Timeline may not be available
-          }
-        }
-
-        allBuilds.push({
-          id: build.id,
-          buildNumber: build.buildNumber,
-          definitionName: build.definition.name,
-          projectName: watched.project,
-          status: build.status as CachedBuild["status"],
-          result: build.result as CachedBuild["result"],
-          startTime: build.startTime ?? build.queueTime,
-          queueTime: build.queueTime,
-          url: buildWebUrl(config.organization, watched.project, build.id),
-          jobs,
-          totalTasks,
-          completedTasks,
-          watched: true,
-        });
-      } catch {
-        // Skip if build can't be fetched
-      }
-    }
-
-    // Sort all builds by queue time (oldest first = when triggered)
-    allBuilds.sort(
-      (a, b) => new Date(a.queueTime).getTime() - new Date(b.queueTime).getTime()
-    );
-
     await setStorage("cachedBuilds", allBuilds);
 
     // Fetch recently completed builds
@@ -255,6 +198,73 @@ async function poll(): Promise<void> {
         // Skip project on error
       }
     }
+
+    // Fetch watched builds and route to appropriate lists
+    const watchedEntries = (await getStorage("watchedBuilds")) ?? [];
+    const now = Date.now();
+    const validWatched = watchedEntries.filter(
+      (w) => new Date(w.expiresAt).getTime() > now
+    );
+    if (validWatched.length !== watchedEntries.length) {
+      await setStorage("watchedBuilds", validWatched);
+    }
+    // Mark any active builds that are also watched
+    const watchedIds = new Set(validWatched.map((w) => w.buildId));
+    for (const b of allBuilds) {
+      if (watchedIds.has(b.id)) b.watched = true;
+    }
+    // Fetch each watched build not already in active or recent lists
+    const activeBuildIds = new Set(allBuilds.map((b) => b.id));
+    const recentBuildIds = new Set(recentBuilds.map((b) => b.id));
+    for (const watched of validWatched) {
+      if (activeBuildIds.has(watched.buildId)) continue;
+      try {
+        const build = await client.getBuild(watched.project, watched.buildId);
+        const cached: CachedBuild = {
+          id: build.id,
+          buildNumber: build.buildNumber,
+          definitionName: build.definition.name,
+          projectName: watched.project,
+          status: build.status as CachedBuild["status"],
+          result: build.result as CachedBuild["result"],
+          startTime: build.startTime ?? build.queueTime,
+          queueTime: build.queueTime,
+          url: buildWebUrl(config.organization, watched.project, build.id),
+          jobs: [],
+          totalTasks: 0,
+          completedTasks: 0,
+          watched: true,
+        };
+
+        if (build.status === "completed") {
+          if (!recentBuildIds.has(build.id)) {
+            recentBuilds.push(cached);
+          } else {
+            const existing = recentBuilds.find((b) => b.id === build.id);
+            if (existing) existing.watched = true;
+          }
+        } else {
+          try {
+            const timeline = await client.getBuildTimeline(watched.project, build.id);
+            const progress = extractJobProgress(timeline);
+            cached.jobs = progress.jobs;
+            cached.totalTasks = progress.totalTasks;
+            cached.completedTasks = progress.completedTasks;
+          } catch {
+            // Timeline may not be available
+          }
+          allBuilds.push(cached);
+        }
+      } catch {
+        // Skip if build can't be fetched
+      }
+    }
+
+    // Re-sort and re-store active builds (watched may have been added)
+    allBuilds.sort(
+      (a, b) => new Date(a.queueTime).getTime() - new Date(b.queueTime).getTime()
+    );
+    await setStorage("cachedBuilds", allBuilds);
 
     await setStorage("cachedRecentBuilds", recentBuilds);
 
@@ -435,7 +445,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       };
       watchedBuilds.push(entry);
       await setStorage("watchedBuilds", watchedBuilds);
-      // Trigger an immediate poll to pick up the new build
+      poll().then(() => sendResponse({ ok: true }));
+    })();
+    return true;
+  }
+
+  if (message.type === "UNWATCH_BUILD") {
+    const { buildId } = message.payload;
+    (async () => {
+      const watchedBuilds = (await getStorage("watchedBuilds")) ?? [];
+      const filtered = watchedBuilds.filter((w) => w.buildId !== buildId);
+      await setStorage("watchedBuilds", filtered);
       poll().then(() => sendResponse({ ok: true }));
     })();
     return true;
