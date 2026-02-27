@@ -7,10 +7,28 @@ import { getStorage, setStorage } from "@/storage/chrome-storage";
  */
 export class BookmarkManager {
   /**
-   * Find or create the bookmark folder by name under "Other Bookmarks".
+   * Find an existing folder by name anywhere in the bookmark tree,
+   * or create one under "Other Bookmarks" if not found.
    */
   async getOrCreateFolder(folderName: string): Promise<string> {
     const tree = await chrome.bookmarks.getTree();
+
+    // Recursively search the entire tree for a folder with this name
+    const findFolder = (nodes: chrome.bookmarks.BookmarkTreeNode[]): string | null => {
+      for (const node of nodes) {
+        if (node.title === folderName && !node.url) return node.id;
+        if (node.children) {
+          const found = findFolder(node.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const existing = findFolder(tree);
+    if (existing) return existing;
+
+    // Create under "Other Bookmarks" if no existing folder found
     const otherBookmarks = tree[0]?.children?.find(
       (c) => c.title === "Other bookmarks" || c.title === "Other Bookmarks"
     ) ?? tree[0]?.children?.[1];
@@ -19,13 +37,6 @@ export class BookmarkManager {
       throw new Error("Could not find Other Bookmarks folder");
     }
 
-    // Search for existing folder
-    const existing = otherBookmarks.children?.find(
-      (c) => c.title === folderName && !c.url
-    );
-    if (existing) return existing.id;
-
-    // Create folder
     const folder = await chrome.bookmarks.create({
       parentId: otherBookmarks.id,
       title: folderName,
