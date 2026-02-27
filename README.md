@@ -4,9 +4,9 @@ Chrome/Edge browser extension that surfaces Azure DevOps pull requests and pipel
 
 ![ADO Companion — settings page and popup](images/screenshot.png)
 
-## Acknowledgements
+### Acknowledgements
 
-- Heavily inspired by [Arc's GitHub integrations](https://arc.net/integrations/github).
+Heavily inspired by [Arc's GitHub integrations](https://arc.net/integrations/github).
 
 ## Features
 
@@ -110,4 +110,5 @@ The **dev harness** (`pnpm dev:harness`) renders the popup and options page outs
 ## Stack
 
 React · TypeScript · Tailwind CSS · Vite · Manifest V3 · Vitest
+
 
