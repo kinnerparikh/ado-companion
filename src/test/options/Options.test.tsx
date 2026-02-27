@@ -66,17 +66,28 @@ describe("Options", () => {
     });
   });
 
-  it("renders Save Settings button", async () => {
+  it("renders Save Settings button disabled initially", async () => {
     render(<Options />);
     await waitFor(() => {
-      expect(screen.getByText("Save Settings")).toBeInTheDocument();
+      const btn = screen.getByText("Save Settings");
+      expect(btn).toBeInTheDocument();
+      expect(btn).toBeDisabled();
     });
   });
 
-  it("saves config to storage and shows confirmation", async () => {
+  it("enables Save button after a change and saves config", async () => {
     render(<Options />);
     await waitFor(() => {
-      expect(screen.getByText("Save Settings")).toBeInTheDocument();
+      expect(screen.getByText("Save Settings")).toBeDisabled();
+    });
+
+    // Make a change to enable the button
+    const orgInput = screen.getByPlaceholderText("e.g. msazure") as HTMLInputElement;
+    fireEvent.change(orgInput, { target: { value: "neworg" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("Save Settings")).not.toBeDisabled();
+      expect(screen.getByText("You have unsaved changes")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByText("Save Settings"));
@@ -84,12 +95,17 @@ describe("Options", () => {
     await waitFor(() => {
       expect(chrome.storage.local.set).toHaveBeenCalled();
       expect(screen.getByText("Settings saved!")).toBeInTheDocument();
+      expect(screen.getByText("Save Settings")).toBeDisabled();
     });
   });
 
   it("sends CONFIG_UPDATED message on save", async () => {
     render(<Options />);
     await waitFor(() => screen.getByText("Save Settings"));
+
+    // Make a change so save is enabled
+    const orgInput = screen.getByPlaceholderText("e.g. msazure") as HTMLInputElement;
+    fireEvent.change(orgInput, { target: { value: "changed" } });
 
     fireEvent.click(screen.getByText("Save Settings"));
 

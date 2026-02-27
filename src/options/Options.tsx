@@ -38,11 +38,17 @@ export default function Options() {
   const [config, setConfig] = useState<ExtensionConfig>(defaultConfig);
   const [error, setError] = useState<ErrorState | null>(null);
   const [saved, setSaved] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState<string>(JSON.stringify(defaultConfig));
+
+  const isDirty = JSON.stringify(config) !== savedSnapshot;
 
   useEffect(() => {
     Promise.all([getStorage("config"), getStorage("errorState")]).then(
       ([c, e]) => {
-        if (c) setConfig(c);
+        if (c) {
+          setConfig(c);
+          setSavedSnapshot(JSON.stringify(c));
+        }
         setError(e ?? null);
       }
     );
@@ -55,38 +61,50 @@ export default function Options() {
 
   const handleSave = async () => {
     await setStorage("config", config);
+    setSavedSnapshot(JSON.stringify(config));
     setSaved(true);
-    // Notify service worker to re-init
     chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }).catch(() => {});
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-xl font-bold text-gray-800 mb-6">ADO Companion Settings</h1>
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1 max-w-xl mx-auto w-full p-6 pb-20">
+        <h1 className="text-xl font-bold text-gray-800 mb-6">ADO Companion Settings</h1>
 
-      {error?.type === "pat_expired" && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-          Your PAT has expired. Please update it below.
-        </div>
-      )}
-
-      <AuthSection config={config} onChange={updateConfig} />
-      <ProjectSection config={config} onChange={updateConfig} />
-      <PollingSection config={config} onChange={updateConfig} />
-      <PipelineDisplaySection config={config} onChange={updateConfig} />
-      <SectionOrderSection config={config} onChange={updateConfig} />
-      <PrSection config={config} onChange={updateConfig} />
-
-      <div className="mt-6 flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 cursor-pointer"
-        >
-          Save Settings
-        </button>
-        {saved && (
-          <span className="text-sm text-green-600">Settings saved!</span>
+        {error?.type === "pat_expired" && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+            Your PAT has expired. Please update it below.
+          </div>
         )}
+
+        <AuthSection config={config} onChange={updateConfig} />
+        <ProjectSection config={config} onChange={updateConfig} />
+        <PollingSection config={config} onChange={updateConfig} />
+        <PipelineDisplaySection config={config} onChange={updateConfig} />
+        <SectionOrderSection config={config} onChange={updateConfig} />
+        <PrSection config={config} onChange={updateConfig} />
+      </div>
+
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 py-3 px-6">
+        <div className="max-w-xl mx-auto flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            disabled={!isDirty}
+            className={`px-4 py-2 text-sm rounded transition-colors ${
+              isDirty
+                ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            Save Settings
+          </button>
+          {saved && !isDirty && (
+            <span className="text-sm text-green-600">Settings saved!</span>
+          )}
+          {isDirty && (
+            <span className="text-sm text-amber-600">You have unsaved changes</span>
+          )}
+        </div>
       </div>
     </div>
   );
