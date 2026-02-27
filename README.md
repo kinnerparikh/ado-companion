@@ -25,7 +25,7 @@ Chrome/Edge browser extension that surfaces Azure DevOps pull requests and pipel
 ### 1. Clone and build
 
 ```bash
-git clone https://github.com/<your-username>/ado-companion.git
+git clone https://github.com/kinnerparikh/ado-companion.git
 cd ado-companion
 pnpm install
 pnpm build
@@ -38,7 +38,6 @@ This compiles everything into the `dist/` folder.
 1. Open your browser and navigate to the extensions page:
    - **Chrome**: `chrome://extensions`
    - **Edge**: `edge://extensions`
-   - **Brave**: `brave://extensions`
 2. Enable **Developer mode** (toggle in the top-right corner).
 3. Click **Load unpacked**.
 4. Select the `dist/` folder inside the cloned repository.
