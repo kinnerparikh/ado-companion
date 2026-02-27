@@ -4,13 +4,17 @@ Chrome/Edge browser extension that surfaces Azure DevOps pull requests and pipel
 
 ![ADO Companion — settings page and popup](images/screenshot.png)
 
+### Acknowledgements
+
+Heavily inspired by [Arc's GitHub integrations](https://arc.net/integrations/github).
+
 ## Features
 
 - **Running Pipelines** — task-level progress for your active builds with job breakdown
 - **Pull Requests** — track your open PRs with status and draft indicators
 - **Pipeline Notifications** — get notified when a build completes, fails, or is canceled
 - **Build Tracking** — visit any ADO build page and opt in to watch it from the popup
-- **Bookmark Management** — optionally sync PRs to a browser bookmark folder
+- ~~**Bookmark Management** — optionally sync PRs to a browser bookmark folder~~
 - **Hybrid Polling** — faster refresh when builds are active, slower when idle
 - **PAT Authentication** — works with short-lived personal access tokens
 
@@ -106,3 +110,6 @@ The **dev harness** (`pnpm dev:harness`) renders the popup and options page outs
 ## Stack
 
 React · TypeScript · Tailwind CSS · Vite · Manifest V3 · Vitest
+
+
+
