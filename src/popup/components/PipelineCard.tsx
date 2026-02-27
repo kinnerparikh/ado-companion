@@ -16,11 +16,13 @@ export default function PipelineCard({ build }: Props) {
   const statusColor =
     build.status === "inProgress"
       ? "text-blue-500"
-      : build.result === "failed"
-        ? "text-red-500"
-        : build.result === "canceled"
-          ? "text-yellow-500"
-          : "text-gray-500";
+      : build.status === "notStarted"
+        ? "text-yellow-500"
+        : build.result === "failed"
+          ? "text-red-500"
+          : build.result === "canceled"
+            ? "text-yellow-500"
+            : "text-gray-500";
 
   return (
     <li className="px-3 py-3">
@@ -42,7 +44,9 @@ export default function PipelineCard({ build }: Props) {
           <span className={`text-xs font-medium ml-2 ${statusColor}`}>
             {build.status === "inProgress"
               ? "Running"
-              : build.result ?? build.status}
+              : build.status === "notStarted"
+                ? "Queued"
+                : build.result ?? build.status}
           </span>
         </div>
 

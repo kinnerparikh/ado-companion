@@ -135,7 +135,7 @@ describe("Popup", () => {
     });
     render(<Popup />);
     await waitFor(() => {
-      expect(screen.getByText("Running Pipelines")).toBeInTheDocument();
+      expect(screen.getByText("Active Pipelines")).toBeInTheDocument();
     });
     expect(screen.queryByText("Pull Requests")).not.toBeInTheDocument();
   });
@@ -148,7 +148,7 @@ describe("Popup", () => {
     });
     render(<Popup />);
     await waitFor(() => {
-      expect(screen.getByText("Running Pipelines")).toBeInTheDocument();
+      expect(screen.getByText("Active Pipelines")).toBeInTheDocument();
       expect(screen.getByText("CI Pipeline")).toBeInTheDocument();
     });
   });

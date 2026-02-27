@@ -13,10 +13,10 @@ export default function RunningPipelines({ builds }: Props) {
   return (
     <div>
       <h2 className="text-xs font-semibold text-gray-500 uppercase px-3 py-2 bg-gray-50">
-        Running Pipelines
+        Active Pipelines
       </h2>
       {sorted.length === 0 ? (
-        <p className="text-xs text-gray-400 px-3 py-3 text-center">No running pipelines</p>
+        <p className="text-xs text-gray-400 px-3 py-3 text-center">No active pipelines</p>
       ) : (
         <ul className="divide-y divide-gray-100">
           {sorted.map((build) => (

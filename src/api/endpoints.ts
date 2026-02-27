@@ -11,8 +11,8 @@ export function projectsUrl(org: string): string {
   return `https://dev.azure.com/${org}/_apis/projects?api-version=${ADO_API_VERSION}&$top=200`;
 }
 
-export function runningBuildsUrl(org: string, project: string, requestedForId?: string): string {
-  let url = `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds?statusFilter=inProgress&api-version=${ADO_API_VERSION}`;
+export function activeBuildsUrl(org: string, project: string, requestedForId?: string): string {
+  let url = `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds?statusFilter=inProgress,notStarted&api-version=${ADO_API_VERSION}`;
   if (requestedForId) {
     url += `&requestedFor=${requestedForId}`;
   }

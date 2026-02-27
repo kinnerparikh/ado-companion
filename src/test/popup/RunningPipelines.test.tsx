@@ -45,7 +45,7 @@ describe("RunningPipelines", () => {
 
   it("shows empty state when no builds", () => {
     render(<RunningPipelines builds={[]} />);
-    expect(screen.getByText("No running pipelines")).toBeInTheDocument();
+    expect(screen.getByText("No active pipelines")).toBeInTheDocument();
   });
 
   it("shows task progress", () => {
