@@ -88,11 +88,16 @@ export default function Popup() {
   const maxCompleted = config.maxCompletedBuilds ?? 10;
   const maxFailed = config.maxFailedBuilds ?? 10;
   const recentHours = config.recentBuildsHours ?? 48;
+  const cutoff = Date.now() - recentHours * 60 * 60 * 1000;
 
-  const completedBuilds = recentBuilds
+  const inTimeWindow = recentBuilds.filter(
+    (b) => new Date(b.queueTime).getTime() >= cutoff
+  );
+
+  const completedBuilds = inTimeWindow
     .filter((b) => b.result === "succeeded" || b.result === "partiallySucceeded")
     .slice(0, maxCompleted);
-  const failedBuilds = recentBuilds
+  const failedBuilds = inTimeWindow
     .filter((b) => b.result === "failed" || (showCanceled && b.result === "canceled"))
     .slice(0, maxFailed);
 
