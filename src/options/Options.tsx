@@ -82,7 +82,7 @@ export default function Options() {
         <PollingSection config={config} onChange={updateConfig} />
         <PipelineDisplaySection config={config} onChange={updateConfig} />
         <SectionOrderSection config={config} onChange={updateConfig} />
-        <PrSection config={config} onChange={updateConfig} />
+        {/* <PrSection config={config} onChange={updateConfig} /> */}
       </div>
 
       <div className="sticky bottom-0 bg-white border-t border-gray-200 py-3 px-6">
