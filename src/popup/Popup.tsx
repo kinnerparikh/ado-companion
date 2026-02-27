@@ -108,13 +108,13 @@ export default function Popup() {
     switch (id) {
       case "pullRequests":
         return config.prSectionEnabled ? (
-          <CollapsibleSection key={id} title="Pull Requests" count={prs.length}>
+          <CollapsibleSection key={id} title="Pull Requests" count={prs.length} defaultOpen={prs.length > 0}>
             <PullRequests prs={prs} />
           </CollapsibleSection>
         ) : null;
       case "activePipelines":
         return (
-          <CollapsibleSection key={id} title="Active Pipelines" count={builds.length}>
+          <CollapsibleSection key={id} title="Active Pipelines" count={builds.length} defaultOpen={builds.length > 0}>
             <RunningPipelines builds={builds} />
           </CollapsibleSection>
         );
