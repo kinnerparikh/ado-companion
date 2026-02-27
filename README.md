@@ -61,7 +61,7 @@ The extension authenticates with Azure DevOps using a PAT.
 1. Click the ADO Companion icon in the toolbar, then click the ⚙️ gear icon to open **Settings** (or right-click the icon → **Options**).
 2. Enter your Azure DevOps **Organization** name (e.g. `msazure`).
 3. Paste your PAT and click **Log In**. The extension will validate the token against the ADO API.
-4. Under **Projects**, add the project names you want to track (or enter `*` to track all projects in the organization).
+4. Under **Projects**, add the project names you want to track (or enter `*` to track all projects in the organization). By default, no projects are tracked so you must add projects or the wildcard flag.
 5. Click **Save Settings**.
 
 The popup will begin showing your active pipelines and pull requests within a few seconds.
