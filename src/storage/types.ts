@@ -1,3 +1,5 @@
+import type { SectionId } from "@/shared/constants";
+
 /** Configuration stored by the extension */
 export interface ExtensionConfig {
   organization: string;
@@ -12,6 +14,7 @@ export interface ExtensionConfig {
   recentBuildsHours: number; // how far back to fetch completed builds
   maxCompletedBuilds: number; // max completed builds to display
   maxFailedBuilds: number; // max failed builds to display
+  sectionOrder: SectionId[]; // order of popup sections
 }
 
 /** Error state stored in storage */

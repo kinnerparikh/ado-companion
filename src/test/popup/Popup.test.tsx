@@ -9,6 +9,7 @@ import {
   DEFAULT_RECENT_BUILDS_HOURS,
   DEFAULT_MAX_COMPLETED_BUILDS,
   DEFAULT_MAX_FAILED_BUILDS,
+  DEFAULT_SECTION_ORDER,
 } from "@/shared/constants";
 
 const fullConfig: ExtensionConfig = {
@@ -24,6 +25,7 @@ const fullConfig: ExtensionConfig = {
   recentBuildsHours: DEFAULT_RECENT_BUILDS_HOURS,
   maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
   maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
+  sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
 const mockPR: CachedPR = {

@@ -9,6 +9,7 @@ import {
   DEFAULT_RECENT_BUILDS_HOURS,
   DEFAULT_MAX_COMPLETED_BUILDS,
   DEFAULT_MAX_FAILED_BUILDS,
+  DEFAULT_SECTION_ORDER,
 } from "@/shared/constants";
 
 const defaultConfig: ExtensionConfig = {
@@ -24,6 +25,7 @@ const defaultConfig: ExtensionConfig = {
   recentBuildsHours: DEFAULT_RECENT_BUILDS_HOURS,
   maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
   maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
+  sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
 function seedStorage(data: Record<string, unknown>) {
@@ -51,13 +53,15 @@ describe("Options", () => {
     });
   });
 
-  it("renders all four sections", async () => {
+  it("renders all sections", async () => {
     render(<Options />);
     await waitFor(() => {
       expect(screen.getByText("Authentication")).toBeInTheDocument();
       expect(screen.getByText("Projects")).toBeInTheDocument();
       expect(screen.getByText("Polling")).toBeInTheDocument();
-      expect(screen.getByText("Pull Requests")).toBeInTheDocument();
+      expect(screen.getByText("Pipeline Display")).toBeInTheDocument();
+      expect(screen.getByText("Section Order")).toBeInTheDocument();
+      expect(screen.getAllByText("Pull Requests").length).toBeGreaterThan(0);
     });
   });
 

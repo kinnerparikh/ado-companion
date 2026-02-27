@@ -8,11 +8,13 @@ import {
   DEFAULT_RECENT_BUILDS_HOURS,
   DEFAULT_MAX_COMPLETED_BUILDS,
   DEFAULT_MAX_FAILED_BUILDS,
+  DEFAULT_SECTION_ORDER,
 } from "@/shared/constants";
 import AuthSection from "./components/AuthSection";
 import ProjectSection from "./components/ProjectSection";
 import PollingSection from "./components/PollingSection";
 import PipelineDisplaySection from "./components/PipelineDisplaySection";
+import SectionOrderSection from "./components/SectionOrderSection";
 import PrSection from "./components/PrSection";
 
 const defaultConfig: ExtensionConfig = {
@@ -28,6 +30,7 @@ const defaultConfig: ExtensionConfig = {
   recentBuildsHours: DEFAULT_RECENT_BUILDS_HOURS,
   maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
   maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
+  sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
 export default function Options() {
@@ -70,6 +73,7 @@ export default function Options() {
       <ProjectSection config={config} onChange={updateConfig} />
       <PollingSection config={config} onChange={updateConfig} />
       <PipelineDisplaySection config={config} onChange={updateConfig} />
+      <SectionOrderSection config={config} onChange={updateConfig} />
       <PrSection config={config} onChange={updateConfig} />
 
       <div className="mt-6 flex items-center gap-3">

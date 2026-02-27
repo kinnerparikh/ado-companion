@@ -6,6 +6,7 @@ import {
   DEFAULT_RECENT_BUILDS_HOURS,
   DEFAULT_MAX_COMPLETED_BUILDS,
   DEFAULT_MAX_FAILED_BUILDS,
+  DEFAULT_SECTION_ORDER,
 } from "@/shared/constants";
 
 export const mockConfig: ExtensionConfig = {
@@ -21,6 +22,7 @@ export const mockConfig: ExtensionConfig = {
   recentBuildsHours: DEFAULT_RECENT_BUILDS_HOURS,
   maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
   maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
+  sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
 export const mockPRs: CachedPR[] = [

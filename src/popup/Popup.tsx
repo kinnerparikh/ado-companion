@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getStorageMulti, onStorageChange } from "@/storage/chrome-storage";
+import { DEFAULT_SECTION_ORDER, type SectionId } from "@/shared/constants";
 import type { CachedBuild, CachedPR, ErrorState, ExtensionConfig } from "@/storage/types";
 import CollapsibleSection from "./components/CollapsibleSection";
 import PullRequests from "./components/PullRequests";
@@ -101,23 +102,41 @@ export default function Popup() {
     .filter((b) => b.result === "failed" || (showCanceled && b.result === "canceled"))
     .slice(0, maxFailed);
 
+  const sectionOrder = config.sectionOrder ?? DEFAULT_SECTION_ORDER;
+
+  const renderSection = (id: SectionId) => {
+    switch (id) {
+      case "pullRequests":
+        return config.prSectionEnabled ? (
+          <CollapsibleSection key={id} title="Pull Requests" count={prs.length}>
+            <PullRequests prs={prs} />
+          </CollapsibleSection>
+        ) : null;
+      case "activePipelines":
+        return (
+          <CollapsibleSection key={id} title="Active Pipelines" count={builds.length}>
+            <RunningPipelines builds={builds} />
+          </CollapsibleSection>
+        );
+      case "completed":
+        return (
+          <CollapsibleSection key={id} title={`Completed (${recentHours}h)`} count={completedBuilds.length} defaultOpen={false}>
+            <RunningPipelines builds={completedBuilds} />
+          </CollapsibleSection>
+        );
+      case "failed":
+        return (
+          <CollapsibleSection key={id} title={`Failed (${recentHours}h)`} count={failedBuilds.length} defaultOpen={false}>
+            <RunningPipelines builds={failedBuilds} />
+          </CollapsibleSection>
+        );
+    }
+  };
+
   return (
     <div className="w-80 max-h-[500px] flex flex-col">
       <div className="flex-1 overflow-y-auto pb-9">
-        {config.prSectionEnabled && (
-          <CollapsibleSection title="Pull Requests" count={prs.length}>
-            <PullRequests prs={prs} />
-          </CollapsibleSection>
-        )}
-        <CollapsibleSection title="Active Pipelines" count={builds.length}>
-          <RunningPipelines builds={builds} />
-        </CollapsibleSection>
-        <CollapsibleSection title={`Completed (${recentHours}h)`} count={completedBuilds.length} defaultOpen={false}>
-          <RunningPipelines builds={completedBuilds} />
-        </CollapsibleSection>
-        <CollapsibleSection title={`Failed (${recentHours}h)`} count={failedBuilds.length} defaultOpen={false}>
-          <RunningPipelines builds={failedBuilds} />
-        </CollapsibleSection>
+        {sectionOrder.map(renderSection)}
       </div>
       <StatusBar lastUpdated={lastUpdated} error={error} />
     </div>

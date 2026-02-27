@@ -10,6 +10,15 @@ export const DEFAULT_RECENT_BUILDS_HOURS = 48;
 export const DEFAULT_MAX_COMPLETED_BUILDS = 10;
 export const DEFAULT_MAX_FAILED_BUILDS = 10;
 
+// Section IDs and default order
+export type SectionId = "pullRequests" | "activePipelines" | "completed" | "failed";
+export const DEFAULT_SECTION_ORDER: SectionId[] = [
+  "pullRequests",
+  "activePipelines",
+  "completed",
+  "failed",
+];
+
 // ADO API version
 export const ADO_API_VERSION = "7.1";
 
