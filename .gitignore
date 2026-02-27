@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.local
+*.zip
 
 # Environment variables (secrets)
 .env
