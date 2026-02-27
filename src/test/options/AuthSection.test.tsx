@@ -39,25 +39,70 @@ describe("AuthSection", () => {
     expect(screen.getByText(/Already signed in/)).toBeInTheDocument();
   });
 
-  it("renders PAT input when no PAT is saved", () => {
+  it("renders PAT input and Log In button when no PAT", () => {
     render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
 
     expect(screen.getByPlaceholderText("Paste your PAT")).toBeInTheDocument();
+    expect(screen.getByText("Log In")).toBeInTheDocument();
+    expect(screen.queryByText("Test Connection")).not.toBeInTheDocument();
+    expect(screen.queryByText("Log Out")).not.toBeInTheDocument();
   });
 
-  it("renders Test Connection button", () => {
+  it("Log In button is disabled when PAT draft is empty", () => {
+    render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
+    expect(screen.getByText("Log In")).toBeDisabled();
+  });
+
+  it("Log In validates PAT and calls onChange on success", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: true,
+      headers: { get: () => "application/json" },
+      json: () =>
+        Promise.resolve({
+          authenticatedUser: {
+            id: "user-123",
+            providerDisplayName: "Test User",
+          },
+        }),
+    } as unknown as Response);
+
+    const onChange = vi.fn();
+    render(<AuthSection config={emptyPatConfig} onChange={onChange} />);
+
+    fireEvent.change(screen.getByPlaceholderText("Paste your PAT"), {
+      target: { value: "my-new-pat" },
+    });
+    fireEvent.click(screen.getByText("Log In"));
+
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledWith({ pat: "my-new-pat" });
+      expect(screen.getByText("Connected as Test User")).toBeInTheDocument();
+    });
+  });
+
+  it("Log In shows error on invalid PAT", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      statusText: "Unauthorized",
+    } as Response);
+
+    render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
+
+    fireEvent.change(screen.getByPlaceholderText("Paste your PAT"), {
+      target: { value: "bad-pat" },
+    });
+    fireEvent.click(screen.getByText("Log In"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Invalid or expired PAT.")).toBeInTheDocument();
+    });
+  });
+
+  it("renders Test Connection and Log Out when signed in", () => {
     render(<AuthSection config={baseConfig} onChange={vi.fn()} />);
     expect(screen.getByText("Test Connection")).toBeInTheDocument();
-  });
-
-  it("renders Log Out button when PAT exists", () => {
-    render(<AuthSection config={baseConfig} onChange={vi.fn()} />);
     expect(screen.getByText("Log Out")).toBeInTheDocument();
-  });
-
-  it("does not render Log Out button when no PAT", () => {
-    render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
-    expect(screen.queryByText("Log Out")).not.toBeInTheDocument();
   });
 
   it("calls onChange to clear PAT and org on logout", async () => {
@@ -80,35 +125,12 @@ describe("AuthSection", () => {
     expect(onChange).toHaveBeenCalledWith({ organization: "neworg" });
   });
 
-  it("calls onChange when PAT input changes (empty state)", () => {
-    const onChange = vi.fn();
-    render(<AuthSection config={emptyPatConfig} onChange={onChange} />);
-
-    fireEvent.change(screen.getByPlaceholderText("Paste your PAT"), {
-      target: { value: "new-pat" },
-    });
-    expect(onChange).toHaveBeenCalledWith({ pat: "new-pat" });
-  });
-
-  it("PAT input has type=password when no PAT saved", () => {
+  it("PAT input has type=password", () => {
     render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
-    const patInput = screen.getByPlaceholderText("Paste your PAT");
-    expect(patInput).toHaveAttribute("type", "password");
-  });
-
-  it("shows error when testing connection without org/pat", async () => {
-    const emptyConfig = { ...baseConfig, organization: "", pat: "" };
-    render(<AuthSection config={emptyConfig} onChange={vi.fn()} />);
-
-    fireEvent.click(screen.getByText("Test Connection"));
-
-    await waitFor(() => {
-      expect(screen.getByText("Organization and PAT are required.")).toBeInTheDocument();
-    });
+    expect(screen.getByPlaceholderText("Paste your PAT")).toHaveAttribute("type", "password");
   });
 
   it("shows success message on successful connection test", async () => {
-    // Mock fetch for connection test
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce({
       ok: true,
       headers: { get: () => "application/json" },
@@ -145,7 +167,6 @@ describe("AuthSection", () => {
   });
 
   it("disables button while testing", async () => {
-    // Never-resolving fetch to keep testing state
     vi.spyOn(globalThis, "fetch").mockReturnValue(new Promise(() => {}));
 
     render(<AuthSection config={baseConfig} onChange={vi.fn()} />);

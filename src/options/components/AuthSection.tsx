@@ -11,12 +11,45 @@ interface Props {
 
 export default function AuthSection({ config, onChange, onLogout }: Props) {
   const [testing, setTesting] = useState(false);
+  const [patDraft, setPatDraft] = useState("");
+  const [loggingIn, setLoggingIn] = useState(false);
   const [testResult, setTestResult] = useState<{
     ok: boolean;
     message: string;
   } | null>(null);
 
   const hasPat = config.pat.length > 0;
+
+  const handleLogin = async () => {
+    if (!config.organization || !patDraft) {
+      setTestResult({ ok: false, message: "Organization and PAT are required." });
+      return;
+    }
+
+    setLoggingIn(true);
+    setTestResult(null);
+
+    try {
+      const client = new AdoClient(config.organization, patDraft);
+      const data = await client.getConnectionData();
+      onChange({ pat: patDraft });
+      setPatDraft("");
+      setTestResult({
+        ok: true,
+        message: `Connected as ${data.authenticatedUser.providerDisplayName}`,
+      });
+    } catch (err) {
+      const message =
+        err instanceof AdoApiError && err.status === 401
+          ? "Invalid or expired PAT."
+          : err instanceof Error
+            ? err.message
+            : "Connection failed.";
+      setTestResult({ ok: false, message });
+    } finally {
+      setLoggingIn(false);
+    }
+  };
 
   const handleTest = async () => {
     if (!config.organization || !config.pat) {
@@ -83,28 +116,37 @@ export default function AuthSection({ config, onChange, onLogout }: Props) {
       ) : (
         <input
           type="password"
-          value={config.pat}
-          onChange={(e) => onChange({ pat: e.target.value })}
+          value={patDraft}
+          onChange={(e) => setPatDraft(e.target.value)}
           placeholder="Paste your PAT"
           className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm mb-3"
         />
       )}
 
       <div className="flex items-center gap-2">
-        <button
-          onClick={handleTest}
-          disabled={testing}
-          className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
-        >
-          {testing ? "Testing…" : "Test Connection"}
-        </button>
-
-        {hasPat && (
+        {hasPat ? (
+          <>
+            <button
+              onClick={handleTest}
+              disabled={testing}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+            >
+              {testing ? "Testing…" : "Test Connection"}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 cursor-pointer"
+            >
+              Log Out
+            </button>
+          </>
+        ) : (
           <button
-            onClick={handleLogout}
-            className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 cursor-pointer"
+            onClick={handleLogin}
+            disabled={loggingIn || !patDraft}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
           >
-            Log Out
+            {loggingIn ? "Signing in…" : "Log In"}
           </button>
         )}
       </div>
