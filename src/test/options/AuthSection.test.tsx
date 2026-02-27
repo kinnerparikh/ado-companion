@@ -60,12 +60,14 @@ describe("AuthSection", () => {
     expect(screen.queryByText("Log Out")).not.toBeInTheDocument();
   });
 
-  it("calls onChange to clear PAT and org on logout", () => {
+  it("calls onChange to clear PAT and org on logout", async () => {
     const onChange = vi.fn();
     render(<AuthSection config={baseConfig} onChange={onChange} />);
 
     fireEvent.click(screen.getByText("Log Out"));
-    expect(onChange).toHaveBeenCalledWith({ pat: "", organization: "" });
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledWith({ pat: "", organization: "" });
+    });
   });
 
   it("calls onChange when organization input changes", () => {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AdoClient, AdoApiError } from "@/api/ado-client";
+import { setStorage, getStorage } from "@/storage/chrome-storage";
 import type { ExtensionConfig } from "@/storage/types";
 
 interface Props {
@@ -45,9 +46,18 @@ export default function AuthSection({ config, onChange }: Props) {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const current = await getStorage("config");
+    const cleared = { ...current!, pat: "", organization: "" };
+    await setStorage("config", cleared);
+    await setStorage("userIdentity", null);
+    await setStorage("cachedBuilds", []);
+    await setStorage("cachedRecentBuilds", []);
+    await setStorage("cachedPRs", []);
+    await setStorage("errorState", null);
     onChange({ pat: "", organization: "" });
     setTestResult(null);
+    chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }).catch(() => {});
   };
 
   return (
