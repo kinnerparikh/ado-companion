@@ -64,9 +64,9 @@ export class AdoClient {
     return this.request<AdoProjectList>(urls.projectsUrl(this.org));
   }
 
-  /** Get running builds for a project */
-  async getRunningBuilds(project: string): Promise<AdoBuildList> {
-    return this.request<AdoBuildList>(urls.runningBuildsUrl(this.org, project));
+  /** Get running builds for a project, optionally filtered by requester */
+  async getRunningBuilds(project: string, requestedForId?: string): Promise<AdoBuildList> {
+    return this.request<AdoBuildList>(urls.runningBuildsUrl(this.org, project, requestedForId));
   }
 
   /** Get build timeline (tasks/jobs) */

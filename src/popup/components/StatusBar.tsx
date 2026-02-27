@@ -19,6 +19,13 @@ export default function StatusBar({ lastUpdated, error }: Props) {
           </span>
         )}
         <button
+          onClick={() => chrome.runtime.sendMessage({ type: "REFRESH_NOW" }).catch(() => {})}
+          className="text-gray-500 hover:text-gray-700 cursor-pointer"
+          title="Refresh"
+        >
+          🔄
+        </button>
+        <button
           onClick={() => chrome.runtime.openOptionsPage()}
           className="text-gray-500 hover:text-gray-700 cursor-pointer"
           title="Settings"

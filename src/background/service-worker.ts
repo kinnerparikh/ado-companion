@@ -120,7 +120,7 @@ async function poll(): Promise<void> {
     const allBuilds: CachedBuild[] = [];
     for (const project of projects) {
       try {
-        const buildsData = await client.getRunningBuilds(project);
+        const buildsData = await client.getRunningBuilds(project, userIdentity!.id);
         const myBuilds = buildsData.value.filter((b) =>
           isBuildMine(b, userIdentity!.id)
         );
