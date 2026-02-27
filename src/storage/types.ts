@@ -32,12 +32,22 @@ export interface UserIdentity {
   uniqueName: string;
 }
 
+/** Watched build entry (manually tracked from build page) */
+export interface WatchedBuild {
+  buildId: number;
+  project: string;
+  organization: string;
+  trackedAt: string; // ISO 8601
+  expiresAt: string; // ISO 8601, 7 days from trackedAt
+}
+
 /** All data stored in chrome.storage.local */
 export interface StorageSchema {
   config: ExtensionConfig;
   cachedBuilds: CachedBuild[];
   cachedRecentBuilds: CachedBuild[];
   cachedPRs: CachedPR[];
+  watchedBuilds: WatchedBuild[];
   lastUpdated: string | null;
   errorState: ErrorState | null;
   userIdentity: UserIdentity | null;
@@ -58,6 +68,7 @@ export interface CachedBuild {
   jobs: CachedJob[];
   totalTasks: number;
   completedTasks: number;
+  watched?: boolean; // manually tracked from build page
 }
 
 /** Cached job entry (within a build) */

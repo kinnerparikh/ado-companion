@@ -34,6 +34,7 @@ export function loadScenario(scenario: Scenario) {
       ? { id: "mock-user-id", displayName: "Mock User", uniqueName: "mock@user.com" }
       : null,
     managedBookmarkIds: [],
+    watchedBuilds: [],
   });
 }
 

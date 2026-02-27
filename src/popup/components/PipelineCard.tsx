@@ -35,6 +35,7 @@ export default function PipelineCard({ build }: Props) {
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800 truncate hover:text-blue-600">
+              {build.watched && <span title="Watched build" className="mr-1">👁</span>}
               {build.definitionName}
             </p>
             <p className="text-xs text-gray-400 truncate mt-0.5">

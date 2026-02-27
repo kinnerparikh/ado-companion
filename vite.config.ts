@@ -43,6 +43,10 @@ export default defineConfig({
           __dirname,
           "src/background/service-worker.ts"
         ),
+        "content-script": resolve(
+          __dirname,
+          "src/content/build-tracker.ts"
+        ),
       },
       output: {
         entryFileNames: "[name].js",

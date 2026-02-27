@@ -31,6 +31,10 @@ export function buildTimelineUrl(org: string, project: string, buildId: number):
   return `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds/${buildId}/timeline?api-version=${ADO_API_VERSION}`;
 }
 
+export function singleBuildUrl(org: string, project: string, buildId: number): string {
+  return `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds/${buildId}?api-version=${ADO_API_VERSION}`;
+}
+
 export function activePullRequestsUrl(org: string, project: string, creatorId: string): string {
   return `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/git/pullrequests?searchCriteria.creatorId=${creatorId}&searchCriteria.status=active&api-version=${ADO_API_VERSION}`;
 }

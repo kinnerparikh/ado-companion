@@ -2,7 +2,7 @@ import { AdoClient, AdoApiError } from "@/api/ado-client";
 import { buildWebUrl, prWebUrl } from "@/api/endpoints";
 import type { AdoTimeline, AdoBuild } from "@/api/types";
 import { BookmarkManager } from "@/bookmarks/bookmark-manager";
-import { POLL_ALARM_NAME } from "@/shared/constants";
+import { POLL_ALARM_NAME, WATCHED_BUILD_EXPIRY_DAYS } from "@/shared/constants";
 import { getStorage, setStorage } from "@/storage/chrome-storage";
 import type {
   CachedBuild,
@@ -11,6 +11,7 @@ import type {
   ExtensionConfig,
   ErrorState,
   UserIdentity,
+  WatchedBuild,
 } from "@/storage/types";
 
 const bookmarkManager = new BookmarkManager();
@@ -163,6 +164,63 @@ async function poll(): Promise<void> {
         // Skip project on error
       }
     }
+
+    // Fetch watched builds and merge with active builds
+    const watchedEntries = (await getStorage("watchedBuilds")) ?? [];
+    const now = Date.now();
+    // Prune expired entries
+    const validWatched = watchedEntries.filter(
+      (w) => new Date(w.expiresAt).getTime() > now
+    );
+    if (validWatched.length !== watchedEntries.length) {
+      await setStorage("watchedBuilds", validWatched);
+    }
+    // Fetch each watched build that isn't already in allBuilds
+    const activeBuildIds = new Set(allBuilds.map((b) => b.id));
+    for (const watched of validWatched) {
+      if (activeBuildIds.has(watched.buildId)) continue;
+      try {
+        const build = await client.getBuild(watched.project, watched.buildId);
+        let jobs: CachedJob[] = [];
+        let totalTasks = 0;
+        let completedTasks = 0;
+
+        if (build.status !== "completed") {
+          try {
+            const timeline = await client.getBuildTimeline(watched.project, build.id);
+            const progress = extractJobProgress(timeline);
+            jobs = progress.jobs;
+            totalTasks = progress.totalTasks;
+            completedTasks = progress.completedTasks;
+          } catch {
+            // Timeline may not be available
+          }
+        }
+
+        allBuilds.push({
+          id: build.id,
+          buildNumber: build.buildNumber,
+          definitionName: build.definition.name,
+          projectName: watched.project,
+          status: build.status as CachedBuild["status"],
+          result: build.result as CachedBuild["result"],
+          startTime: build.startTime ?? build.queueTime,
+          queueTime: build.queueTime,
+          url: buildWebUrl(config.organization, watched.project, build.id),
+          jobs,
+          totalTasks,
+          completedTasks,
+          watched: true,
+        });
+      } catch {
+        // Skip if build can't be fetched
+      }
+    }
+
+    // Sort all builds by queue time (oldest first = when triggered)
+    allBuilds.sort(
+      (a, b) => new Date(a.queueTime).getTime() - new Date(b.queueTime).getTime()
+    );
 
     await setStorage("cachedBuilds", allBuilds);
 
@@ -334,11 +392,53 @@ chrome.notifications.onClicked.addListener(async (notificationId) => {
   }
 });
 
-// Handle messages from popup/options
+// Handle messages from popup/options/content scripts
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "REFRESH_NOW" || message.type === "CONFIG_UPDATED") {
     poll().then(() => sendResponse({ ok: true }));
-    return true; // async response
+    return true;
+  }
+
+  if (message.type === "CHECK_BUILD_TRACKED") {
+    const { org, project, buildId } = message.payload;
+    (async () => {
+      const config = await getStorage("config");
+      const isConfiguredOrg =
+        config?.organization?.toLowerCase() === org.toLowerCase();
+      const watchedBuilds = (await getStorage("watchedBuilds")) ?? [];
+      const cachedBuilds = (await getStorage("cachedBuilds")) ?? [];
+      const alreadyTracked =
+        watchedBuilds.some((w) => w.buildId === buildId) ||
+        cachedBuilds.some((b) => b.id === buildId);
+      sendResponse({ isConfiguredOrg, alreadyTracked });
+    })();
+    return true;
+  }
+
+  if (message.type === "TRACK_BUILD") {
+    const { org, project, buildId } = message.payload;
+    (async () => {
+      const watchedBuilds = (await getStorage("watchedBuilds")) ?? [];
+      if (watchedBuilds.some((w) => w.buildId === buildId)) {
+        sendResponse({ ok: true });
+        return;
+      }
+      const now = new Date();
+      const entry: WatchedBuild = {
+        buildId,
+        project,
+        organization: org,
+        trackedAt: now.toISOString(),
+        expiresAt: new Date(
+          now.getTime() + WATCHED_BUILD_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+        ).toISOString(),
+      };
+      watchedBuilds.push(entry);
+      await setStorage("watchedBuilds", watchedBuilds);
+      // Trigger an immediate poll to pick up the new build
+      poll().then(() => sendResponse({ ok: true }));
+    })();
+    return true;
   }
 });
 

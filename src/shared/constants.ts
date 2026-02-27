@@ -19,6 +19,9 @@ export const DEFAULT_SECTION_ORDER: SectionId[] = [
   "failed",
 ];
 
+// Watched build defaults
+export const WATCHED_BUILD_EXPIRY_DAYS = 7;
+
 // ADO API version
 export const ADO_API_VERSION = "7.1";
 

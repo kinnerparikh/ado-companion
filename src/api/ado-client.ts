@@ -3,6 +3,7 @@ import * as urls from "./endpoints";
 import type {
   AdoConnectionData,
   AdoProjectList,
+  AdoBuild,
   AdoBuildList,
   AdoTimeline,
   AdoPullRequestList,
@@ -72,6 +73,13 @@ export class AdoClient {
   /** Get recently completed builds (within minFinishTime), optionally filtered by requester */
   async getRecentBuilds(project: string, minFinishTime: string, requestedForId?: string): Promise<AdoBuildList> {
     return this.request<AdoBuildList>(urls.recentBuildsUrl(this.org, project, minFinishTime, requestedForId));
+  }
+
+  /** Get a single build by ID */
+  async getBuild(project: string, buildId: number): Promise<AdoBuild> {
+    return this.request<AdoBuild>(
+      urls.singleBuildUrl(this.org, project, buildId)
+    );
   }
 
   /** Get build timeline (tasks/jobs) */
