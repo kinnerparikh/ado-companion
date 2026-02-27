@@ -66,6 +66,18 @@ export default function Options() {
     chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }).catch(() => {});
   };
 
+  // Called after AuthSection validates the PAT — persist immediately
+  const handleLogin = () => {
+    setConfig((current) => {
+      setStorage("config", current).then(() => {
+        setSavedSnapshot(JSON.stringify(current));
+        setSaved(true);
+        chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }).catch(() => {});
+      });
+      return current;
+    });
+  };
+
   const handleLogout = () => {
     const cleared = { ...config, pat: "", organization: "" };
     setConfig(cleared);
@@ -84,7 +96,7 @@ export default function Options() {
           </div>
         )}
 
-        <AuthSection config={config} onChange={updateConfig} onLogout={handleLogout} />
+        <AuthSection config={config} onChange={updateConfig} onLogout={handleLogout} onLogin={handleLogin} />
         <ProjectSection config={config} onChange={updateConfig} />
         <PollingSection config={config} onChange={updateConfig} />
         <PipelineDisplaySection config={config} onChange={updateConfig} />

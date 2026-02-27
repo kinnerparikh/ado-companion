@@ -7,9 +7,10 @@ interface Props {
   config: ExtensionConfig;
   onChange: (patch: Partial<ExtensionConfig>) => void;
   onLogout?: () => void;
+  onLogin?: () => void;
 }
 
-export default function AuthSection({ config, onChange, onLogout }: Props) {
+export default function AuthSection({ config, onChange, onLogout, onLogin }: Props) {
   const [testing, setTesting] = useState(false);
   const [patDraft, setPatDraft] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
@@ -38,6 +39,7 @@ export default function AuthSection({ config, onChange, onLogout }: Props) {
         ok: true,
         message: `Connected as ${data.authenticatedUser.providerDisplayName}`,
       });
+      onLogin?.();
     } catch (err) {
       const message =
         err instanceof AdoApiError && err.status === 401
