@@ -13,6 +13,16 @@ export default function PipelineDisplaySection({ config, onChange }: Props) {
       <label className="flex items-center gap-2 mb-3">
         <input
           type="checkbox"
+          checked={config.notificationsEnabled ?? true}
+          onChange={(e) => onChange({ notificationsEnabled: e.target.checked })}
+          className="rounded"
+        />
+        <span className="text-sm text-gray-600">Send notification when a pipeline completes</span>
+      </label>
+
+      <label className="flex items-center gap-2 mb-3">
+        <input
+          type="checkbox"
           checked={config.showCanceledBuilds ?? false}
           onChange={(e) => onChange({ showCanceledBuilds: e.target.checked })}
           className="rounded"

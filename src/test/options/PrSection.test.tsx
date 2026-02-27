@@ -26,6 +26,7 @@ const baseConfig: ExtensionConfig = {
   maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
   maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
   sectionOrder: DEFAULT_SECTION_ORDER,
+  notificationsEnabled: true,
 };
 
 describe("PrSection", () => {

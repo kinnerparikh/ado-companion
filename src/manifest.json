@@ -3,7 +3,7 @@
   "name": "ADO Companion",
   "version": "1.0.0",
   "description": "Track Azure DevOps builds and pull requests at a glance.",
-  "permissions": ["storage", "bookmarks", "alarms"],
+  "permissions": ["storage", "bookmarks", "alarms", "notifications"],
   "action": {
     "default_popup": "src/popup/index.html",
     "default_icon": {

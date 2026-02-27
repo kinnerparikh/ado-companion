@@ -116,6 +116,10 @@ async function poll(): Promise<void> {
   try {
     const projects = await resolveProjects(client, config);
 
+    // Snapshot previous active build IDs for completion detection
+    const previousActiveBuilds = (await getStorage("cachedBuilds")) ?? [];
+    const previousActiveIds = new Set(previousActiveBuilds.map((b) => b.id));
+
     // Fetch running builds
     const allBuilds: CachedBuild[] = [];
     for (const project of projects) {
@@ -195,6 +199,29 @@ async function poll(): Promise<void> {
     }
 
     await setStorage("cachedRecentBuilds", recentBuilds);
+
+    // Send notifications for newly completed pipelines
+    if (config.notificationsEnabled !== false && previousActiveIds.size > 0) {
+      const currentActiveIds = new Set(allBuilds.map((b) => b.id));
+      const recentById = new Map(recentBuilds.map((b) => [b.id, b]));
+
+      for (const prevId of previousActiveIds) {
+        if (!currentActiveIds.has(prevId)) {
+          const finished = recentById.get(prevId);
+          const prev = previousActiveBuilds.find((b) => b.id === prevId);
+          const name = finished?.definitionName ?? prev?.definitionName ?? `Build ${prevId}`;
+          const result = finished?.result ?? "completed";
+          const icon = result === "succeeded" ? "✅" : result === "failed" ? "❌" : "⚠️";
+
+          chrome.notifications.create(`build-${prevId}`, {
+            type: "basic",
+            iconUrl: "icons/icon128.png",
+            title: `${icon} Pipeline ${result}`,
+            message: name,
+          });
+        }
+      }
+    }
 
     // Fetch PRs if enabled
     if (config.prSectionEnabled) {
@@ -291,6 +318,19 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === POLL_ALARM_NAME) {
     poll();
+  }
+});
+
+// Open build page when notification is clicked
+chrome.notifications.onClicked.addListener(async (notificationId) => {
+  if (notificationId.startsWith("build-")) {
+    const buildId = parseInt(notificationId.replace("build-", ""), 10);
+    const recent = await getStorage("cachedRecentBuilds");
+    const build = recent?.find((b) => b.id === buildId);
+    if (build?.url) {
+      chrome.tabs.create({ url: build.url });
+    }
+    chrome.notifications.clear(notificationId);
   }
 });
 

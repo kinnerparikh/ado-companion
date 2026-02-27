@@ -15,6 +15,7 @@ export interface ExtensionConfig {
   maxCompletedBuilds: number; // max completed builds to display
   maxFailedBuilds: number; // max failed builds to display
   sectionOrder: SectionId[]; // order of popup sections
+  notificationsEnabled: boolean; // send browser notification when pipeline completes
 }
 
 /** Error state stored in storage */

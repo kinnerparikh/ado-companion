@@ -85,6 +85,14 @@ const mockChrome = {
     setBadgeText: () => Promise.resolve(),
     setBadgeBackgroundColor: () => Promise.resolve(),
   },
+  notifications: {
+    create: (_id: string, _opts: unknown) => Promise.resolve(),
+    clear: () => Promise.resolve(),
+    onClicked: { addListener: () => {} },
+  },
+  tabs: {
+    create: () => Promise.resolve(),
+  },
 };
 
 (globalThis as Record<string, unknown>).chrome = mockChrome;
