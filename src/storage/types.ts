@@ -77,4 +77,10 @@ export interface CachedPR {
   url: string; // link to ADO
   createdDate: string;
   lastUpdated: string;
+  isDraft: boolean;
+  status: "active" | "completed" | "abandoned";
+  mergeStatus?: "conflicts" | "succeeded" | "queued" | "rejectedByPolicy" | "failure" | "notSet";
+  approvalCount: number; // number of approvals (vote >= 5)
+  waitingCount: number; // number of "wait for author" (vote === -5)
+  rejectionCount: number; // number of rejections (vote === -10)
 }

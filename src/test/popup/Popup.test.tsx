@@ -36,6 +36,11 @@ const mockPR: CachedPR = {
   url: "https://example.com/pr/101",
   createdDate: "2025-02-25T10:00:00Z",
   lastUpdated: "2025-02-26T10:00:00Z",
+  isDraft: false,
+  status: "active" as const,
+  approvalCount: 0,
+  waitingCount: 0,
+  rejectionCount: 0,
 };
 
 const mockBuild: CachedBuild = {

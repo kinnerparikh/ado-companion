@@ -34,6 +34,11 @@ export const mockPRs: CachedPR[] = [
     url: "https://dev.azure.com/myorg/ProjectA/_git/web-app/pullrequest/101",
     createdDate: new Date(Date.now() - 2 * 86400000).toISOString(),
     lastUpdated: new Date(Date.now() - 3600000).toISOString(),
+    isDraft: false,
+    status: "active" as const,
+    approvalCount: 2,
+    waitingCount: 0,
+    rejectionCount: 0,
   },
   {
     id: 102,
@@ -43,6 +48,11 @@ export const mockPRs: CachedPR[] = [
     url: "https://dev.azure.com/myorg/ProjectB/_git/infra-tools/pullrequest/102",
     createdDate: new Date(Date.now() - 86400000).toISOString(),
     lastUpdated: new Date(Date.now() - 7200000).toISOString(),
+    isDraft: true,
+    status: "active" as const,
+    approvalCount: 0,
+    waitingCount: 0,
+    rejectionCount: 0,
   },
   {
     id: 103,
@@ -52,6 +62,11 @@ export const mockPRs: CachedPR[] = [
     url: "https://dev.azure.com/myorg/ProjectA/_git/web-app/pullrequest/103",
     createdDate: new Date(Date.now() - 3 * 86400000).toISOString(),
     lastUpdated: new Date(Date.now() - 86400000).toISOString(),
+    isDraft: false,
+    status: "active" as const,
+    approvalCount: 0,
+    waitingCount: 1,
+    rejectionCount: 0,
   },
 ];
 

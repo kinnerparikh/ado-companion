@@ -10,6 +10,11 @@ const makePR = (id: number, url: string): CachedPR => ({
   url,
   createdDate: "2025-02-25T10:00:00Z",
   lastUpdated: "2025-02-26T10:00:00Z",
+  isDraft: false,
+  status: "active" as const,
+  approvalCount: 0,
+  waitingCount: 0,
+  rejectionCount: 0,
 });
 
 describe("BookmarkManager", () => {

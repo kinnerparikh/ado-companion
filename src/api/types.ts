@@ -89,6 +89,13 @@ export interface AdoPullRequest {
   pullRequestId: number;
   title: string;
   status: "abandoned" | "active" | "completed" | "all";
+  isDraft: boolean;
+  mergeStatus?: "conflicts" | "failure" | "notSet" | "queued" | "rejectedByPolicy" | "succeeded";
+  reviewers?: Array<{
+    id: string;
+    displayName: string;
+    vote: number; // -10=rejected, -5=waiting, 0=none, 5=approved_suggestions, 10=approved
+  }>;
   createdBy: {
     id: string;
     displayName: string;

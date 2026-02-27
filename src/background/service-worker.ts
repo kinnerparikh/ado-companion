@@ -206,6 +206,7 @@ async function poll(): Promise<void> {
             userIdentity.id
           );
           for (const pr of prsData.value) {
+            const reviewers = pr.reviewers ?? [];
             allPRs.push({
               id: pr.pullRequestId,
               title: pr.title,
@@ -221,6 +222,12 @@ async function poll(): Promise<void> {
                 ),
               createdDate: pr.creationDate,
               lastUpdated: pr.closedDate ?? pr.creationDate,
+              isDraft: pr.isDraft ?? false,
+              status: pr.status as CachedPR["status"],
+              mergeStatus: pr.mergeStatus as CachedPR["mergeStatus"],
+              approvalCount: reviewers.filter((r) => r.vote >= 5).length,
+              waitingCount: reviewers.filter((r) => r.vote === -5).length,
+              rejectionCount: reviewers.filter((r) => r.vote === -10).length,
             });
           }
         } catch {
