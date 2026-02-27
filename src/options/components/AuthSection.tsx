@@ -11,7 +11,6 @@ interface Props {
 
 export default function AuthSection({ config, onChange, onLogout }: Props) {
   const [testing, setTesting] = useState(false);
-  const [showPatInput, setShowPatInput] = useState(false);
   const [testResult, setTestResult] = useState<{
     ok: boolean;
     message: string;
@@ -59,7 +58,6 @@ export default function AuthSection({ config, onChange, onLogout }: Props) {
     await setStorage("errorState", null);
     onChange({ pat: "", organization: "" });
     setTestResult(null);
-    setShowPatInput(false);
     onLogout?.();
     chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }).catch(() => {});
   };
@@ -82,44 +80,34 @@ export default function AuthSection({ config, onChange, onLogout }: Props) {
         <div className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm mb-3 bg-gray-50 text-gray-500">
           ✓ Already signed in
         </div>
-      ) : showPatInput ? (
+      ) : (
         <input
           type="password"
           value={config.pat}
           onChange={(e) => onChange({ pat: e.target.value })}
           placeholder="Paste your PAT"
           className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm mb-3"
-          autoFocus
         />
-      ) : (
+      )}
+
+      <div className="flex items-center gap-2">
         <button
-          onClick={() => setShowPatInput(true)}
-          className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer mb-3"
+          onClick={handleTest}
+          disabled={testing}
+          className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
         >
-          Log In
+          {testing ? "Testing…" : "Test Connection"}
         </button>
-      )}
 
-      {(hasPat || showPatInput) && (
-        <div className="flex items-center gap-2">
+        {hasPat && (
           <button
-            onClick={handleTest}
-            disabled={testing}
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 cursor-pointer"
+            onClick={handleLogout}
+            className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 cursor-pointer"
           >
-            {testing ? "Testing…" : "Test Connection"}
+            Log Out
           </button>
-
-          {hasPat && (
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 cursor-pointer"
-            >
-              Log Out
-            </button>
-          )}
-        </div>
-      )}
+        )}
+      </div>
 
       {testResult && (
         <p

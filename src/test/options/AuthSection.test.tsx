@@ -39,19 +39,10 @@ describe("AuthSection", () => {
     expect(screen.getByText(/Already signed in/)).toBeInTheDocument();
   });
 
-  it("shows Log In button when no PAT is saved", () => {
+  it("renders PAT input when no PAT is saved", () => {
     render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
 
-    expect(screen.getByText("Log In")).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText("Paste your PAT")).not.toBeInTheDocument();
-  });
-
-  it("reveals PAT input after clicking Log In", () => {
-    render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
-
-    fireEvent.click(screen.getByText("Log In"));
     expect(screen.getByPlaceholderText("Paste your PAT")).toBeInTheDocument();
-    expect(screen.queryByText("Log In")).not.toBeInTheDocument();
   });
 
   it("renders Test Connection button", () => {
@@ -89,20 +80,18 @@ describe("AuthSection", () => {
     expect(onChange).toHaveBeenCalledWith({ organization: "neworg" });
   });
 
-  it("calls onChange when PAT input changes (after Log In)", () => {
+  it("calls onChange when PAT input changes (empty state)", () => {
     const onChange = vi.fn();
     render(<AuthSection config={emptyPatConfig} onChange={onChange} />);
 
-    fireEvent.click(screen.getByText("Log In"));
     fireEvent.change(screen.getByPlaceholderText("Paste your PAT"), {
       target: { value: "new-pat" },
     });
     expect(onChange).toHaveBeenCalledWith({ pat: "new-pat" });
   });
 
-  it("PAT input has type=password after Log In", () => {
+  it("PAT input has type=password when no PAT saved", () => {
     render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
-    fireEvent.click(screen.getByText("Log In"));
     const patInput = screen.getByPlaceholderText("Paste your PAT");
     expect(patInput).toHaveAttribute("type", "password");
   });
@@ -111,7 +100,6 @@ describe("AuthSection", () => {
     const emptyConfig = { ...baseConfig, organization: "", pat: "" };
     render(<AuthSection config={emptyConfig} onChange={vi.fn()} />);
 
-    fireEvent.click(screen.getByText("Log In"));
     fireEvent.click(screen.getByText("Test Connection"));
 
     await waitFor(() => {
