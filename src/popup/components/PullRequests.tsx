@@ -14,7 +14,7 @@ function prStatusLabel(pr: CachedPR): { text: string; color: string } {
 
 export default function PullRequests({ prs }: Props) {
   const sorted = [...prs].sort(
-    (a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+    (a, b) => new Date(a.createdDate).getTime() - new Date(b.createdDate).getTime()
   );
 
   if (sorted.length === 0) {

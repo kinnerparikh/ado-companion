@@ -58,11 +58,11 @@ describe("PullRequests", () => {
     expect(links[0]).toHaveAttribute("target", "_blank");
   });
 
-  it("sorts PRs by most recently updated", () => {
+  it("sorts PRs oldest first by creation date", () => {
     render(<PullRequests prs={mockPRs} />);
 
     const items = screen.getAllByRole("link");
-    // PR 102 was updated more recently (12:00) vs PR 101 (10:00)
+    // PR 102 was created earlier (Feb 24) vs PR 101 (Feb 25)
     expect(items[0]).toHaveTextContent("fix: Pipeline timeout");
     expect(items[1]).toHaveTextContent("feat: Add auth");
   });
