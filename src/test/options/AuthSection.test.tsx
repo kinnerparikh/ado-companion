@@ -29,18 +29,43 @@ const baseConfig: ExtensionConfig = {
   notificationsEnabled: true,
 };
 
+const emptyPatConfig: ExtensionConfig = { ...baseConfig, pat: "" };
+
 describe("AuthSection", () => {
-  it("renders organization and PAT inputs", () => {
-    const onChange = vi.fn();
-    render(<AuthSection config={baseConfig} onChange={onChange} />);
+  it("renders organization input and signed-in indicator when PAT exists", () => {
+    render(<AuthSection config={baseConfig} onChange={vi.fn()} />);
 
     expect(screen.getByPlaceholderText("e.g. msazure")).toBeInTheDocument();
+    expect(screen.getByText(/Already signed in/)).toBeInTheDocument();
+  });
+
+  it("renders PAT input when no PAT is saved", () => {
+    render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
+
     expect(screen.getByPlaceholderText("Paste your PAT")).toBeInTheDocument();
   });
 
   it("renders Test Connection button", () => {
     render(<AuthSection config={baseConfig} onChange={vi.fn()} />);
     expect(screen.getByText("Test Connection")).toBeInTheDocument();
+  });
+
+  it("renders Log Out button when PAT exists", () => {
+    render(<AuthSection config={baseConfig} onChange={vi.fn()} />);
+    expect(screen.getByText("Log Out")).toBeInTheDocument();
+  });
+
+  it("does not render Log Out button when no PAT", () => {
+    render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
+    expect(screen.queryByText("Log Out")).not.toBeInTheDocument();
+  });
+
+  it("calls onChange to clear PAT and org on logout", () => {
+    const onChange = vi.fn();
+    render(<AuthSection config={baseConfig} onChange={onChange} />);
+
+    fireEvent.click(screen.getByText("Log Out"));
+    expect(onChange).toHaveBeenCalledWith({ pat: "", organization: "" });
   });
 
   it("calls onChange when organization input changes", () => {
@@ -53,14 +78,20 @@ describe("AuthSection", () => {
     expect(onChange).toHaveBeenCalledWith({ organization: "neworg" });
   });
 
-  it("calls onChange when PAT input changes", () => {
+  it("calls onChange when PAT input changes (empty state)", () => {
     const onChange = vi.fn();
-    render(<AuthSection config={baseConfig} onChange={onChange} />);
+    render(<AuthSection config={emptyPatConfig} onChange={onChange} />);
 
     fireEvent.change(screen.getByPlaceholderText("Paste your PAT"), {
       target: { value: "new-pat" },
     });
     expect(onChange).toHaveBeenCalledWith({ pat: "new-pat" });
+  });
+
+  it("PAT input has type=password when no PAT saved", () => {
+    render(<AuthSection config={emptyPatConfig} onChange={vi.fn()} />);
+    const patInput = screen.getByPlaceholderText("Paste your PAT");
+    expect(patInput).toHaveAttribute("type", "password");
   });
 
   it("shows error when testing connection without org/pat", async () => {
@@ -120,11 +151,5 @@ describe("AuthSection", () => {
 
     expect(screen.getByText("Testing…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Testing…" })).toBeDisabled();
-  });
-
-  it("PAT input has type=password", () => {
-    render(<AuthSection config={baseConfig} onChange={vi.fn()} />);
-    const patInput = screen.getByPlaceholderText("Paste your PAT");
-    expect(patInput).toHaveAttribute("type", "password");
   });
 });
