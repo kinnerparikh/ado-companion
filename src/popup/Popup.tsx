@@ -58,6 +58,17 @@ export default function Popup() {
     return (
       <div className="w-96 p-4 text-center">
         <p className="text-sm text-gray-500 mb-2">Not configured</p>
+        <p className="text-xs text-gray-400 mb-3">
+          You need a Personal Access Token.{" "}
+          <a
+            href="https://dev.azure.com/msazure/_usersSettings/tokens"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            Generate one here
+          </a>
+        </p>
         <button
           className="text-sm text-blue-500 hover:underline cursor-pointer"
           onClick={() => chrome.runtime.openOptionsPage()}

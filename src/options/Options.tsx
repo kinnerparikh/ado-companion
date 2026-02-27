@@ -66,6 +66,13 @@ export default function Options() {
     chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }).catch(() => {});
   };
 
+  const handleLogout = () => {
+    const cleared = { ...config, pat: "", organization: "" };
+    setConfig(cleared);
+    setSavedSnapshot(JSON.stringify(cleared));
+    setSaved(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex-1 max-w-xl mx-auto w-full p-6 pb-20">
@@ -77,7 +84,7 @@ export default function Options() {
           </div>
         )}
 
-        <AuthSection config={config} onChange={updateConfig} />
+        <AuthSection config={config} onChange={updateConfig} onLogout={handleLogout} />
         <ProjectSection config={config} onChange={updateConfig} />
         <PollingSection config={config} onChange={updateConfig} />
         <PipelineDisplaySection config={config} onChange={updateConfig} />

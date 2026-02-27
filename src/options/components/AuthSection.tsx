@@ -6,9 +6,10 @@ import type { ExtensionConfig } from "@/storage/types";
 interface Props {
   config: ExtensionConfig;
   onChange: (patch: Partial<ExtensionConfig>) => void;
+  onLogout?: () => void;
 }
 
-export default function AuthSection({ config, onChange }: Props) {
+export default function AuthSection({ config, onChange, onLogout }: Props) {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{
     ok: boolean;
@@ -57,6 +58,7 @@ export default function AuthSection({ config, onChange }: Props) {
     await setStorage("errorState", null);
     onChange({ pat: "", organization: "" });
     setTestResult(null);
+    onLogout?.();
     chrome.runtime.sendMessage({ type: "CONFIG_UPDATED" }).catch(() => {});
   };
 
