@@ -5,6 +5,11 @@ export const DEFAULT_IDLE_POLL_INTERVAL = 120;
 // Bookmark defaults
 export const DEFAULT_BOOKMARK_FOLDER = "Open PRs";
 
+// Pipeline display defaults
+export const DEFAULT_RECENT_BUILDS_HOURS = 48;
+export const DEFAULT_MAX_COMPLETED_BUILDS = 10;
+export const DEFAULT_MAX_FAILED_BUILDS = 10;
+
 // ADO API version
 export const ADO_API_VERSION = "7.1";
 

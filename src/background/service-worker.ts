@@ -162,9 +162,10 @@ async function poll(): Promise<void> {
 
     await setStorage("cachedBuilds", allBuilds);
 
-    // Fetch recently completed builds (last 24h)
+    // Fetch recently completed builds
     const recentBuilds: CachedBuild[] = [];
-    const minFinishTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const recentHours = config.recentBuildsHours ?? 48;
+    const minFinishTime = new Date(Date.now() - recentHours * 60 * 60 * 1000).toISOString();
     for (const project of projects) {
       try {
         const recentData = await client.getRecentBuilds(project, minFinishTime, userIdentity!.id);

@@ -6,6 +6,9 @@ import {
   DEFAULT_ACTIVE_POLL_INTERVAL,
   DEFAULT_IDLE_POLL_INTERVAL,
   DEFAULT_BOOKMARK_FOLDER,
+  DEFAULT_RECENT_BUILDS_HOURS,
+  DEFAULT_MAX_COMPLETED_BUILDS,
+  DEFAULT_MAX_FAILED_BUILDS,
 } from "@/shared/constants";
 
 const baseConfig: ExtensionConfig = {
@@ -17,6 +20,10 @@ const baseConfig: ExtensionConfig = {
   prSectionEnabled: true,
   bookmarksEnabled: false,
   bookmarkFolderName: DEFAULT_BOOKMARK_FOLDER,
+  showCanceledBuilds: false,
+  recentBuildsHours: DEFAULT_RECENT_BUILDS_HOURS,
+  maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
+  maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
 };
 
 describe("ProjectSection", () => {

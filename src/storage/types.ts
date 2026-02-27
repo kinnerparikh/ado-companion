@@ -8,6 +8,10 @@ export interface ExtensionConfig {
   prSectionEnabled: boolean;
   bookmarksEnabled: boolean;
   bookmarkFolderName: string;
+  showCanceledBuilds: boolean;
+  recentBuildsHours: number; // how far back to fetch completed builds
+  maxCompletedBuilds: number; // max completed builds to display
+  maxFailedBuilds: number; // max failed builds to display
 }
 
 /** Error state stored in storage */

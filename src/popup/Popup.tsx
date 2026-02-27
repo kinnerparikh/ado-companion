@@ -84,8 +84,17 @@ export default function Popup() {
     );
   }
 
-  const completedBuilds = recentBuilds.filter((b) => b.result === "succeeded" || b.result === "partiallySucceeded");
-  const failedBuilds = recentBuilds.filter((b) => b.result === "failed" || b.result === "canceled");
+  const showCanceled = config.showCanceledBuilds ?? false;
+  const maxCompleted = config.maxCompletedBuilds ?? 10;
+  const maxFailed = config.maxFailedBuilds ?? 10;
+  const recentHours = config.recentBuildsHours ?? 48;
+
+  const completedBuilds = recentBuilds
+    .filter((b) => b.result === "succeeded" || b.result === "partiallySucceeded")
+    .slice(0, maxCompleted);
+  const failedBuilds = recentBuilds
+    .filter((b) => b.result === "failed" || (showCanceled && b.result === "canceled"))
+    .slice(0, maxFailed);
 
   return (
     <div className="w-80 max-h-[500px] flex flex-col">
@@ -98,10 +107,10 @@ export default function Popup() {
         <CollapsibleSection title="Active Pipelines" count={builds.length}>
           <RunningPipelines builds={builds} />
         </CollapsibleSection>
-        <CollapsibleSection title="Completed (24h)" count={completedBuilds.length} defaultOpen={false}>
+        <CollapsibleSection title={`Completed (${recentHours}h)`} count={completedBuilds.length} defaultOpen={false}>
           <RunningPipelines builds={completedBuilds} />
         </CollapsibleSection>
-        <CollapsibleSection title="Failed (24h)" count={failedBuilds.length} defaultOpen={false}>
+        <CollapsibleSection title={`Failed (${recentHours}h)`} count={failedBuilds.length} defaultOpen={false}>
           <RunningPipelines builds={failedBuilds} />
         </CollapsibleSection>
       </div>

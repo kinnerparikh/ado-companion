@@ -5,10 +5,14 @@ import {
   DEFAULT_ACTIVE_POLL_INTERVAL,
   DEFAULT_IDLE_POLL_INTERVAL,
   DEFAULT_BOOKMARK_FOLDER,
+  DEFAULT_RECENT_BUILDS_HOURS,
+  DEFAULT_MAX_COMPLETED_BUILDS,
+  DEFAULT_MAX_FAILED_BUILDS,
 } from "@/shared/constants";
 import AuthSection from "./components/AuthSection";
 import ProjectSection from "./components/ProjectSection";
 import PollingSection from "./components/PollingSection";
+import PipelineDisplaySection from "./components/PipelineDisplaySection";
 import PrSection from "./components/PrSection";
 
 const defaultConfig: ExtensionConfig = {
@@ -20,6 +24,10 @@ const defaultConfig: ExtensionConfig = {
   prSectionEnabled: true,
   bookmarksEnabled: false,
   bookmarkFolderName: DEFAULT_BOOKMARK_FOLDER,
+  showCanceledBuilds: false,
+  recentBuildsHours: DEFAULT_RECENT_BUILDS_HOURS,
+  maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
+  maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
 };
 
 export default function Options() {
@@ -61,6 +69,7 @@ export default function Options() {
       <AuthSection config={config} onChange={updateConfig} />
       <ProjectSection config={config} onChange={updateConfig} />
       <PollingSection config={config} onChange={updateConfig} />
+      <PipelineDisplaySection config={config} onChange={updateConfig} />
       <PrSection config={config} onChange={updateConfig} />
 
       <div className="mt-6 flex items-center gap-3">

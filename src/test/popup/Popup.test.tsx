@@ -6,6 +6,9 @@ import {
   DEFAULT_ACTIVE_POLL_INTERVAL,
   DEFAULT_IDLE_POLL_INTERVAL,
   DEFAULT_BOOKMARK_FOLDER,
+  DEFAULT_RECENT_BUILDS_HOURS,
+  DEFAULT_MAX_COMPLETED_BUILDS,
+  DEFAULT_MAX_FAILED_BUILDS,
 } from "@/shared/constants";
 
 const fullConfig: ExtensionConfig = {
@@ -17,6 +20,10 @@ const fullConfig: ExtensionConfig = {
   prSectionEnabled: true,
   bookmarksEnabled: false,
   bookmarkFolderName: DEFAULT_BOOKMARK_FOLDER,
+  showCanceledBuilds: false,
+  recentBuildsHours: DEFAULT_RECENT_BUILDS_HOURS,
+  maxCompletedBuilds: DEFAULT_MAX_COMPLETED_BUILDS,
+  maxFailedBuilds: DEFAULT_MAX_FAILED_BUILDS,
 };
 
 const mockPR: CachedPR = {
@@ -192,8 +199,8 @@ describe("Popup", () => {
     });
     render(<Popup />);
     await waitFor(() => {
-      expect(screen.getByText(/Completed \(24h\)/)).toBeInTheDocument();
-      expect(screen.getByText(/Failed \(24h\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Completed \(48h\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Failed \(48h\)/)).toBeInTheDocument();
     });
   });
 
