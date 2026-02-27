@@ -11,7 +11,7 @@ export default function RunningPipelines({ builds }: Props) {
   );
 
   return (
-    <div className="flex-1">
+    <div>
       <h2 className="text-xs font-semibold text-gray-500 uppercase px-3 py-2 bg-gray-50">
         Running Pipelines
       </h2>

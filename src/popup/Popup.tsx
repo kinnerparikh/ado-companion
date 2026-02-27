@@ -81,11 +81,13 @@ export default function Popup() {
   }
 
   return (
-    <div className="w-80 min-h-40 flex flex-col">
-      {config.prSectionEnabled && (
-        <PullRequests prs={prs} />
-      )}
-      <RunningPipelines builds={builds} />
+    <div>
+      <div className="w-80 min-h-40 flex flex-col">
+        {config.prSectionEnabled && (
+          <PullRequests prs={prs} />
+        )}
+        <RunningPipelines builds={builds} />
+      </div>
       <StatusBar lastUpdated={lastUpdated} error={error} />
     </div>
   );
