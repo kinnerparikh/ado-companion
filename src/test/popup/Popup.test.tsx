@@ -43,6 +43,36 @@ const mockBuild: CachedBuild = {
   jobs: [],
 };
 
+const mockCompletedBuild: CachedBuild = {
+  id: 6001,
+  buildNumber: "20250226.3",
+  definitionName: "Deploy Pipeline",
+  projectName: "ProjectA",
+  status: "completed",
+  result: "succeeded",
+  startTime: new Date(Date.now() - 3600000).toISOString(),
+  queueTime: new Date(Date.now() - 3600000).toISOString(),
+  url: "https://example.com/build/6001",
+  totalTasks: 5,
+  completedTasks: 5,
+  jobs: [],
+};
+
+const mockFailedBuild: CachedBuild = {
+  id: 6002,
+  buildNumber: "20250226.4",
+  definitionName: "Test Pipeline",
+  projectName: "ProjectA",
+  status: "completed",
+  result: "failed",
+  startTime: new Date(Date.now() - 7200000).toISOString(),
+  queueTime: new Date(Date.now() - 7200000).toISOString(),
+  url: "https://example.com/build/6002",
+  totalTasks: 8,
+  completedTasks: 3,
+  jobs: [],
+};
+
 function seedStorage(data: Record<string, unknown>) {
   vi.mocked(chrome.storage.local.get).mockImplementation((keys: string | string[]) => {
     const keyArr = typeof keys === "string" ? [keys] : keys;
@@ -122,7 +152,7 @@ describe("Popup", () => {
     });
     render(<Popup />);
     await waitFor(() => {
-      expect(screen.getByText("Pull Requests")).toBeInTheDocument();
+      expect(screen.getByText(/Pull Requests/)).toBeInTheDocument();
       expect(screen.getByText("My PR")).toBeInTheDocument();
     });
   });
@@ -135,9 +165,9 @@ describe("Popup", () => {
     });
     render(<Popup />);
     await waitFor(() => {
-      expect(screen.getByText("Active Pipelines")).toBeInTheDocument();
+      expect(screen.getByText(/Active Pipelines/)).toBeInTheDocument();
     });
-    expect(screen.queryByText("Pull Requests")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Pull Requests/)).not.toBeInTheDocument();
   });
 
   it("renders running pipelines section", async () => {
@@ -148,8 +178,22 @@ describe("Popup", () => {
     });
     render(<Popup />);
     await waitFor(() => {
-      expect(screen.getByText("Active Pipelines")).toBeInTheDocument();
+      expect(screen.getByText(/Active Pipelines/)).toBeInTheDocument();
       expect(screen.getByText("CI Pipeline")).toBeInTheDocument();
+    });
+  });
+
+  it("renders completed and failed sections", async () => {
+    seedStorage({
+      config: fullConfig,
+      cachedBuilds: [],
+      cachedRecentBuilds: [mockCompletedBuild, mockFailedBuild],
+      cachedPRs: [],
+    });
+    render(<Popup />);
+    await waitFor(() => {
+      expect(screen.getByText(/Completed \(24h\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Failed \(24h\)/)).toBeInTheDocument();
     });
   });
 

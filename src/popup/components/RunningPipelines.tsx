@@ -3,27 +3,23 @@ import PipelineCard from "./PipelineCard";
 
 interface Props {
   builds: CachedBuild[];
+  emptyText?: string;
 }
 
-export default function RunningPipelines({ builds }: Props) {
+export default function RunningPipelines({ builds, emptyText = "None" }: Props) {
   const sorted = [...builds].sort(
     (a, b) => new Date(b.queueTime).getTime() - new Date(a.queueTime).getTime()
   );
 
+  if (sorted.length === 0) {
+    return <p className="text-xs text-gray-400 px-3 py-3 text-center">{emptyText}</p>;
+  }
+
   return (
-    <div>
-      <h2 className="text-xs font-semibold text-gray-500 uppercase px-3 py-2 bg-gray-50">
-        Active Pipelines
-      </h2>
-      {sorted.length === 0 ? (
-        <p className="text-xs text-gray-400 px-3 py-3 text-center">No active pipelines</p>
-      ) : (
-        <ul className="divide-y divide-gray-100">
-          {sorted.map((build) => (
-            <PipelineCard key={build.id} build={build} />
-          ))}
-        </ul>
-      )}
-    </div>
+    <ul className="divide-y divide-gray-100">
+      {sorted.map((build) => (
+        <PipelineCard key={build.id} build={build} />
+      ))}
+    </ul>
   );
 }

@@ -28,6 +28,7 @@ export interface UserIdentity {
 export interface StorageSchema {
   config: ExtensionConfig;
   cachedBuilds: CachedBuild[];
+  cachedRecentBuilds: CachedBuild[];
   cachedPRs: CachedPR[];
   lastUpdated: string | null;
   errorState: ErrorState | null;

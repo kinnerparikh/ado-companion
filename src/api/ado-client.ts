@@ -69,6 +69,11 @@ export class AdoClient {
     return this.request<AdoBuildList>(urls.activeBuildsUrl(this.org, project, requestedForId));
   }
 
+  /** Get recently completed builds (within minFinishTime), optionally filtered by requester */
+  async getRecentBuilds(project: string, minFinishTime: string, requestedForId?: string): Promise<AdoBuildList> {
+    return this.request<AdoBuildList>(urls.recentBuildsUrl(this.org, project, minFinishTime, requestedForId));
+  }
+
   /** Get build timeline (tasks/jobs) */
   async getBuildTimeline(project: string, buildId: number): Promise<AdoTimeline> {
     return this.request<AdoTimeline>(

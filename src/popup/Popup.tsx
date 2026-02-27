@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { getStorageMulti, onStorageChange } from "@/storage/chrome-storage";
 import type { CachedBuild, CachedPR, ErrorState, ExtensionConfig } from "@/storage/types";
+import CollapsibleSection from "./components/CollapsibleSection";
 import PullRequests from "./components/PullRequests";
 import RunningPipelines from "./components/RunningPipelines";
 import StatusBar from "./components/StatusBar";
 
 export default function Popup() {
   const [builds, setBuilds] = useState<CachedBuild[]>([]);
+  const [recentBuilds, setRecentBuilds] = useState<CachedBuild[]>([]);
   const [prs, setPrs] = useState<CachedPR[]>([]);
   const [config, setConfig] = useState<ExtensionConfig | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -15,9 +17,10 @@ export default function Popup() {
 
   useEffect(() => {
     // Load initial data
-    getStorageMulti(["cachedBuilds", "cachedPRs", "config", "lastUpdated", "errorState"]).then(
+    getStorageMulti(["cachedBuilds", "cachedRecentBuilds", "cachedPRs", "config", "lastUpdated", "errorState"]).then(
       (data) => {
         setBuilds(data.cachedBuilds ?? []);
+        setRecentBuilds(data.cachedRecentBuilds ?? []);
         setPrs(data.cachedPRs ?? []);
         setConfig(data.config ?? null);
         setLastUpdated(data.lastUpdated ?? null);
@@ -32,6 +35,7 @@ export default function Popup() {
     // Listen for storage updates
     const unsubs = [
       onStorageChange("cachedBuilds", (v) => setBuilds(v ?? [])),
+      onStorageChange("cachedRecentBuilds", (v) => setRecentBuilds(v ?? [])),
       onStorageChange("cachedPRs", (v) => setPrs(v ?? [])),
       onStorageChange("lastUpdated", (v) => setLastUpdated(v ?? null)),
       onStorageChange("errorState", (v) => setError(v ?? null)),
@@ -80,13 +84,26 @@ export default function Popup() {
     );
   }
 
+  const completedBuilds = recentBuilds.filter((b) => b.result === "succeeded" || b.result === "partiallySucceeded");
+  const failedBuilds = recentBuilds.filter((b) => b.result === "failed" || b.result === "canceled");
+
   return (
-    <div>
-      <div className="w-80 min-h-40 flex flex-col">
+    <div className="w-80 max-h-[500px] flex flex-col">
+      <div className="flex-1 overflow-y-auto pb-9">
         {config.prSectionEnabled && (
-          <PullRequests prs={prs} />
+          <CollapsibleSection title="Pull Requests" count={prs.length}>
+            <PullRequests prs={prs} />
+          </CollapsibleSection>
         )}
-        <RunningPipelines builds={builds} />
+        <CollapsibleSection title="Active Pipelines" count={builds.length}>
+          <RunningPipelines builds={builds} />
+        </CollapsibleSection>
+        <CollapsibleSection title="Completed (24h)" count={completedBuilds.length} defaultOpen={false}>
+          <RunningPipelines builds={completedBuilds} />
+        </CollapsibleSection>
+        <CollapsibleSection title="Failed (24h)" count={failedBuilds.length} defaultOpen={false}>
+          <RunningPipelines builds={failedBuilds} />
+        </CollapsibleSection>
       </div>
       <StatusBar lastUpdated={lastUpdated} error={error} />
     </div>

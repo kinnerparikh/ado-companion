@@ -162,6 +162,39 @@ async function poll(): Promise<void> {
 
     await setStorage("cachedBuilds", allBuilds);
 
+    // Fetch recently completed builds (last 24h)
+    const recentBuilds: CachedBuild[] = [];
+    const minFinishTime = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    for (const project of projects) {
+      try {
+        const recentData = await client.getRecentBuilds(project, minFinishTime, userIdentity!.id);
+        const myRecent = recentData.value.filter((b) =>
+          isBuildMine(b, userIdentity!.id)
+        );
+
+        for (const build of myRecent) {
+          recentBuilds.push({
+            id: build.id,
+            buildNumber: build.buildNumber,
+            definitionName: build.definition.name,
+            projectName: project,
+            status: build.status as CachedBuild["status"],
+            result: build.result as CachedBuild["result"],
+            startTime: build.startTime ?? build.queueTime,
+            queueTime: build.queueTime,
+            url: buildWebUrl(config.organization, project, build.id),
+            jobs: [],
+            totalTasks: 0,
+            completedTasks: 0,
+          });
+        }
+      } catch {
+        // Skip project on error
+      }
+    }
+
+    await setStorage("cachedRecentBuilds", recentBuilds);
+
     // Fetch PRs if enabled
     if (config.prSectionEnabled) {
       const allPRs: CachedPR[] = [];

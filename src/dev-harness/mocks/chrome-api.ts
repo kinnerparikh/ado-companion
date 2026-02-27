@@ -26,6 +26,7 @@ export function loadScenario(scenario: Scenario) {
   setMockStorage({
     config: scenario.config,
     cachedBuilds: scenario.builds,
+    cachedRecentBuilds: scenario.recentBuilds,
     cachedPRs: scenario.prs,
     lastUpdated: scenario.lastUpdated,
     errorState: scenario.errorState,

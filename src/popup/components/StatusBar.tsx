@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { relativeTime } from "@/shared/utils";
 import type { ErrorState } from "@/storage/types";
 
@@ -7,8 +8,19 @@ interface Props {
 }
 
 export default function StatusBar({ lastUpdated, error }: Props) {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    // Update every second to keep relative time fresh
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="absolute bottom-0 left-0 right-0 px-3 py-1.5 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs text-gray-400">
+    <div className="sticky bottom-0 px-3 py-1.5 bg-gray-50 border-t border-gray-200 flex justify-between items-center text-xs text-gray-400">
       <span>
         {lastUpdated ? `Updated ${relativeTime(lastUpdated)}` : "Never updated"}
       </span>

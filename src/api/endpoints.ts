@@ -19,6 +19,14 @@ export function activeBuildsUrl(org: string, project: string, requestedForId?: s
   return url;
 }
 
+export function recentBuildsUrl(org: string, project: string, minFinishTime: string, requestedForId?: string): string {
+  let url = `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds?statusFilter=completed&minFinishTime=${encodeURIComponent(minFinishTime)}&api-version=${ADO_API_VERSION}`;
+  if (requestedForId) {
+    url += `&requestedFor=${requestedForId}`;
+  }
+  return url;
+}
+
 export function buildTimelineUrl(org: string, project: string, buildId: number): string {
   return `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds/${buildId}/timeline?api-version=${ADO_API_VERSION}`;
 }
