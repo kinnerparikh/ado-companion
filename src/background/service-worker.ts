@@ -121,81 +121,98 @@ async function poll(): Promise<void> {
     const previousActiveBuilds = (await getStorage("cachedBuilds")) ?? [];
     const previousActiveIds = new Set(previousActiveBuilds.map((b) => b.id));
 
-    // Fetch running builds
+    // Fetch running builds (all projects in parallel)
     const allBuilds: CachedBuild[] = [];
-    for (const project of projects) {
-      try {
-        const buildsData = await client.getRunningBuilds(project, userIdentity!.id);
-        const myBuilds = buildsData.value.filter((b) =>
-          isBuildMine(b, userIdentity!.id)
-        );
+    const runningResults = await Promise.allSettled(
+      projects.map((project) => client.getRunningBuilds(project, userIdentity!.id).then((data) => ({ project, data })))
+    );
 
-        for (const build of myBuilds) {
-          let jobs: CachedJob[] = [];
-          let totalTasks = 0;
-          let completedTasks = 0;
-
-          try {
-            const timeline = await client.getBuildTimeline(project, build.id);
-            const progress = extractJobProgress(timeline);
-            jobs = progress.jobs;
-            totalTasks = progress.totalTasks;
-            completedTasks = progress.completedTasks;
-          } catch {
-            // Timeline may not be available yet
-          }
-
-          allBuilds.push({
-            id: build.id,
-            buildNumber: build.buildNumber,
-            definitionName: build.definition.name,
-            projectName: project,
-            status: build.status as CachedBuild["status"],
-            result: build.result as CachedBuild["result"],
-            startTime: build.startTime ?? build.queueTime,
-            queueTime: build.queueTime,
-            url: buildWebUrl(config.organization, project, build.id),
-            jobs,
-            totalTasks,
-            completedTasks,
-          });
+    const myBuildsByProject: { project: string; build: AdoBuild }[] = [];
+    for (const result of runningResults) {
+      if (result.status !== "fulfilled") continue;
+      const { project, data } = result.value;
+      for (const build of data.value) {
+        if (isBuildMine(build, userIdentity!.id)) {
+          myBuildsByProject.push({ project, build });
         }
-      } catch {
-        // Skip project on error
       }
+    }
+
+    // Fetch timelines in parallel for all running builds
+    const timelineResults = await Promise.allSettled(
+      myBuildsByProject.map(({ project, build }) =>
+        client.getBuildTimeline(project, build.id).then((timeline) => ({ build, project, timeline }))
+      )
+    );
+
+    const timelineMap = new Map<number, AdoTimeline>();
+    for (const result of timelineResults) {
+      if (result.status === "fulfilled") {
+        timelineMap.set(result.value.build.id, result.value.timeline);
+      }
+    }
+
+    for (const { project, build } of myBuildsByProject) {
+      let jobs: CachedJob[] = [];
+      let totalTasks = 0;
+      let completedTasks = 0;
+
+      const timeline = timelineMap.get(build.id);
+      if (timeline) {
+        const progress = extractJobProgress(timeline);
+        jobs = progress.jobs;
+        totalTasks = progress.totalTasks;
+        completedTasks = progress.completedTasks;
+      }
+
+      allBuilds.push({
+        id: build.id,
+        buildNumber: build.buildNumber,
+        definitionName: build.definition.name,
+        projectName: project,
+        status: build.status as CachedBuild["status"],
+        result: build.result as CachedBuild["result"],
+        startTime: build.startTime ?? build.queueTime,
+        queueTime: build.queueTime,
+        url: buildWebUrl(config.organization, project, build.id),
+        jobs,
+        totalTasks,
+        completedTasks,
+      });
     }
 
     await setStorage("cachedBuilds", allBuilds);
 
-    // Fetch recently completed builds
+    // Fetch recently completed builds (all projects in parallel)
     const recentBuilds: CachedBuild[] = [];
     const recentHours = config.recentBuildsHours ?? 48;
     const minFinishTime = new Date(Date.now() - recentHours * 60 * 60 * 1000).toISOString();
-    for (const project of projects) {
-      try {
-        const recentData = await client.getRecentBuilds(project, minFinishTime, userIdentity!.id);
-        const myRecent = recentData.value.filter((b) =>
-          isBuildMine(b, userIdentity!.id)
-        );
+    const recentResults = await Promise.allSettled(
+      projects.map((project) => client.getRecentBuilds(project, minFinishTime, userIdentity!.id).then((data) => ({ project, data })))
+    );
 
-        for (const build of myRecent) {
-          recentBuilds.push({
-            id: build.id,
-            buildNumber: build.buildNumber,
-            definitionName: build.definition.name,
-            projectName: project,
-            status: build.status as CachedBuild["status"],
-            result: build.result as CachedBuild["result"],
-            startTime: build.startTime ?? build.queueTime,
-            queueTime: build.queueTime,
-            url: buildWebUrl(config.organization, project, build.id),
-            jobs: [],
-            totalTasks: 0,
-            completedTasks: 0,
-          });
-        }
-      } catch {
-        // Skip project on error
+    for (const result of recentResults) {
+      if (result.status !== "fulfilled") continue;
+      const { project, data } = result.value;
+      const myRecent = data.value.filter((b) =>
+        isBuildMine(b, userIdentity!.id)
+      );
+
+      for (const build of myRecent) {
+        recentBuilds.push({
+          id: build.id,
+          buildNumber: build.buildNumber,
+          definitionName: build.definition.name,
+          projectName: project,
+          status: build.status as CachedBuild["status"],
+          result: build.result as CachedBuild["result"],
+          startTime: build.startTime ?? build.queueTime,
+          queueTime: build.queueTime,
+          url: buildWebUrl(config.organization, project, build.id),
+          jobs: [],
+          totalTasks: 0,
+          completedTasks: 0,
+        });
       }
     }
 
@@ -213,23 +230,41 @@ async function poll(): Promise<void> {
     for (const b of allBuilds) {
       if (watchedIds.has(b.id)) b.watched = true;
     }
-    // Fetch each watched build not already in active or recent lists
+    // Fetch each watched build not already in active or recent lists (batched by project)
     const activeBuildIds = new Set(allBuilds.map((b) => b.id));
     const recentBuildIds = new Set(recentBuilds.map((b) => b.id));
+
+    // Group unwatched builds by project for batch fetching
+    const watchedByProject = new Map<string, WatchedBuild[]>();
     for (const watched of validWatched) {
       if (activeBuildIds.has(watched.buildId)) continue;
-      try {
-        const build = await client.getBuild(watched.project, watched.buildId);
+      const list = watchedByProject.get(watched.project) ?? [];
+      list.push(watched);
+      watchedByProject.set(watched.project, list);
+    }
+
+    // Batch fetch watched builds per project
+    const watchedFetchResults = await Promise.allSettled(
+      Array.from(watchedByProject.entries()).map(([project, entries]) =>
+        client.getBuildsBatch(project, entries.map((e) => e.buildId)).then((data) => ({ project, builds: data.value }))
+      )
+    );
+
+    const watchedActiveBuilds: { project: string; build: AdoBuild }[] = [];
+    for (const result of watchedFetchResults) {
+      if (result.status !== "fulfilled") continue;
+      const { project, builds } = result.value;
+      for (const build of builds) {
         const cached: CachedBuild = {
           id: build.id,
           buildNumber: build.buildNumber,
           definitionName: build.definition.name,
-          projectName: watched.project,
+          projectName: project,
           status: build.status as CachedBuild["status"],
           result: build.result as CachedBuild["result"],
           startTime: build.startTime ?? build.queueTime,
           queueTime: build.queueTime,
-          url: buildWebUrl(config.organization, watched.project, build.id),
+          url: buildWebUrl(config.organization, project, build.id),
           jobs: [],
           totalTasks: 0,
           completedTasks: 0,
@@ -244,19 +279,28 @@ async function poll(): Promise<void> {
             if (existing) existing.watched = true;
           }
         } else {
-          try {
-            const timeline = await client.getBuildTimeline(watched.project, build.id);
-            const progress = extractJobProgress(timeline);
-            cached.jobs = progress.jobs;
-            cached.totalTasks = progress.totalTasks;
-            cached.completedTasks = progress.completedTasks;
-          } catch {
-            // Timeline may not be available
-          }
+          watchedActiveBuilds.push({ project, build });
           allBuilds.push(cached);
         }
-      } catch {
-        // Skip if build can't be fetched
+      }
+    }
+
+    // Fetch timelines for watched active builds in parallel
+    const watchedTimelineResults = await Promise.allSettled(
+      watchedActiveBuilds.map(({ project, build }) =>
+        client.getBuildTimeline(project, build.id).then((timeline) => ({ buildId: build.id, timeline }))
+      )
+    );
+
+    for (const result of watchedTimelineResults) {
+      if (result.status !== "fulfilled") continue;
+      const { buildId, timeline } = result.value;
+      const cached = allBuilds.find((b) => b.id === buildId);
+      if (cached) {
+        const progress = extractJobProgress(timeline);
+        cached.jobs = progress.jobs;
+        cached.totalTasks = progress.totalTasks;
+        cached.completedTasks = progress.completedTasks;
       }
     }
 
@@ -291,42 +335,42 @@ async function poll(): Promise<void> {
       }
     }
 
-    // Fetch PRs if enabled
+    // Fetch PRs if enabled (all projects in parallel)
     if (config.prSectionEnabled) {
       const allPRs: CachedPR[] = [];
-      for (const project of projects) {
-        try {
-          const prsData = await client.getActivePullRequests(
-            project,
-            userIdentity.id
-          );
-          for (const pr of prsData.value) {
-            const reviewers = pr.reviewers ?? [];
-            allPRs.push({
-              id: pr.pullRequestId,
-              title: pr.title,
-              projectName: project,
-              repositoryName: pr.repository.name,
-              url:
-                pr._links?.web?.href ??
-                prWebUrl(
-                  config.organization,
-                  project,
-                  pr.repository.name,
-                  pr.pullRequestId
-                ),
-              createdDate: pr.creationDate,
-              lastUpdated: pr.closedDate ?? pr.creationDate,
-              isDraft: pr.isDraft ?? false,
-              status: pr.status as CachedPR["status"],
-              mergeStatus: pr.mergeStatus as CachedPR["mergeStatus"],
-              approvalCount: reviewers.filter((r) => r.vote >= 5).length,
-              waitingCount: reviewers.filter((r) => r.vote === -5).length,
-              rejectionCount: reviewers.filter((r) => r.vote === -10).length,
-            });
-          }
-        } catch {
-          // Skip project on error
+      const prResults = await Promise.allSettled(
+        projects.map((project) =>
+          client.getActivePullRequests(project, userIdentity.id).then((data) => ({ project, data }))
+        )
+      );
+
+      for (const result of prResults) {
+        if (result.status !== "fulfilled") continue;
+        const { project, data } = result.value;
+        for (const pr of data.value) {
+          const reviewers = pr.reviewers ?? [];
+          allPRs.push({
+            id: pr.pullRequestId,
+            title: pr.title,
+            projectName: project,
+            repositoryName: pr.repository.name,
+            url:
+              pr._links?.web?.href ??
+              prWebUrl(
+                config.organization,
+                project,
+                pr.repository.name,
+                pr.pullRequestId
+              ),
+            createdDate: pr.creationDate,
+            lastUpdated: pr.closedDate ?? pr.creationDate,
+            isDraft: pr.isDraft ?? false,
+            status: pr.status as CachedPR["status"],
+            mergeStatus: pr.mergeStatus as CachedPR["mergeStatus"],
+            approvalCount: reviewers.filter((r) => r.vote >= 5).length,
+            waitingCount: reviewers.filter((r) => r.vote === -5).length,
+            rejectionCount: reviewers.filter((r) => r.vote === -10).length,
+          });
         }
       }
 

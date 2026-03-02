@@ -82,6 +82,13 @@ export class AdoClient {
     );
   }
 
+  /** Get multiple builds by ID in a single API call */
+  async getBuildsBatch(project: string, buildIds: number[]): Promise<AdoBuildList> {
+    return this.request<AdoBuildList>(
+      urls.batchBuildsUrl(this.org, project, buildIds)
+    );
+  }
+
   /** Get build timeline (tasks/jobs) */
   async getBuildTimeline(project: string, buildId: number): Promise<AdoTimeline> {
     return this.request<AdoTimeline>(

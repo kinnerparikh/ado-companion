@@ -35,6 +35,10 @@ export function singleBuildUrl(org: string, project: string, buildId: number): s
   return `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds/${buildId}?api-version=${ADO_API_VERSION}`;
 }
 
+export function batchBuildsUrl(org: string, project: string, buildIds: number[]): string {
+  return `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/build/builds?buildIds=${buildIds.join(",")}&api-version=${ADO_API_VERSION}`;
+}
+
 export function activePullRequestsUrl(org: string, project: string, creatorId: string): string {
   return `https://dev.azure.com/${org}/${encodeURIComponent(project)}/_apis/git/pullrequests?searchCriteria.creatorId=${creatorId}&searchCriteria.status=active&api-version=${ADO_API_VERSION}`;
 }

@@ -81,6 +81,43 @@ describe("AdoClient", () => {
     expect(result.value[0].status).toBe("inProgress");
   });
 
+  it("should fetch multiple builds in a single batch request", async () => {
+    const mockBuilds = {
+      count: 3,
+      value: [
+        { id: 10, buildNumber: "20250226.1", status: "inProgress" },
+        { id: 20, buildNumber: "20250226.2", status: "completed" },
+        { id: 30, buildNumber: "20250226.3", status: "inProgress" },
+      ],
+    };
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(mockJsonResponse(mockBuilds));
+
+    const client = new AdoClient("myorg", "pat");
+    const result = await client.getBuildsBatch("ProjectA", [10, 20, 30]);
+
+    expect(result.value).toHaveLength(3);
+    expect(result.value.map((b: { id: number }) => b.id)).toEqual([10, 20, 30]);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining("buildIds=10,20,30"),
+      expect.any(Object)
+    );
+  });
+
+  it("should use correct URL format for batch builds request", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      mockJsonResponse({ count: 0, value: [] })
+    );
+
+    const client = new AdoClient("myorg", "pat");
+    await client.getBuildsBatch("My Project", [1, 2]);
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://dev.azure.com/myorg/My%20Project/_apis/build/builds?buildIds=1,2&api-version=7.1",
+      expect.any(Object)
+    );
+  });
+
   it("should fetch active PRs for a user", async () => {
     const mockPRs = {
       count: 2,
