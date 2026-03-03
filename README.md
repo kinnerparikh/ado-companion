@@ -20,13 +20,28 @@ Heavily inspired by [Arc's GitHub integrations](https://arc.net/integrations/git
 
 ## Installation
 
-### Prerequisites
+### 1. Install from Chrome Web Store (Recommended)
+
+The easiest way to get started:
+
+1. Visit the [ADO Companion extension](https://chromewebstore.google.com/detail/ado-companion/hkcmacecaebheppoangflphhjpbkcmfa) on the Chrome Web Store.
+2. Click **Add to Chrome** (or **Add to Edge** if using Edge).
+3. Confirm the installation when prompted.
+4. The ADO Companion icon will appear in your browser toolbar. Pin it for quick access.
+
+### 2. Sideload from Source (Alternative)
+
+If you prefer to build from source or want the latest development changes:
+
+#### Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or later
 - [pnpm](https://pnpm.io/) v10 or later (`npm install -g pnpm` if you don't have it)
 - A Chromium-based browser (Chrome, Edge, Brave, Arc, etc.)
 
-### 1. Clone and build
+#### Build and load
+
+1. Clone and build:
 
 ```bash
 git clone https://github.com/kinnerparikh/ado-companion.git
@@ -37,15 +52,13 @@ pnpm build
 
 This compiles everything into the `dist/` folder.
 
-### 2. Load the extension
-
-1. Open your browser and navigate to the extensions page:
-   - **Chrome**: `chrome://extensions`
-   - **Edge**: `edge://extensions`
-2. Enable **Developer mode** (toggle in the top-right corner).
-3. Click **Load unpacked**.
-4. Select the `dist/` folder inside the cloned repository.
-5. The ADO Companion icon will appear in your browser toolbar. Pin it for quick access.
+2. Load the extension:
+   - Open your browser and navigate to the extensions page:
+     - **Chrome**: `chrome://extensions`
+     - **Edge**: `edge://extensions`
+   - Enable **Developer mode** (toggle in the top-right corner).
+   - Click **Load unpacked**.
+   - Select the `dist/` folder inside the cloned repository.
 
 ### 3. Generate a Personal Access Token (PAT)
 
